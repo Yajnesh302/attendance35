@@ -1,0 +1,1941 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="AttendanceApp.SiteMaster" %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title><asp:ContentPlaceHolder ID="TitleContent" runat="server"></asp:ContentPlaceHolder> - Attendance Recording System (Skilled, Semi-Skilled) (ARS)</title>
+    
+    <!-- Custom fonts for this template-->
+    <link href="Static/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+    <!-- Custom styles for this template-->
+    <link href="Static/css/sb-admin-2.min.css" rel="stylesheet" />
+    <link href="Static/css/dark-theme.css?v=<%=DateTime.Now.Ticks%>" rel="stylesheet" />
+
+    <style>
+        /* High-Performance Modern Welcome Tour Styles */
+        #tourSpotlightRing {
+            position: absolute;
+            z-index: 999995;
+            pointer-events: none;
+            border-radius: 18px;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72), 0 0 0 3px #6366f1, 0 12px 35px rgba(99, 102, 241, 0.45);
+            transition: top 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        left 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        height 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-radius 0.22s ease;
+            display: none;
+        }
+
+        #tourTooltipPopover {
+            position: absolute;
+            z-index: 1000000;
+            width: 360px;
+            max-width: calc(100vw - 28px);
+            background: #ffffff;
+            color: #0f172a;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(226, 232, 240, 0.9);
+            overflow: hidden;
+            transition: top 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        left 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        opacity 0.18s ease;
+            display: none;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        html.theme-dark #tourTooltipPopover {
+            background: #1e293b;
+            color: #f8fafc;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(51, 65, 85, 0.8);
+        }
+
+        .tour-popover-header {
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            padding: 14px 18px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tour-tag-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 12px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .tour-step-counter {
+            font-size: 0.76rem;
+            color: #e0e7ff;
+            font-weight: 700;
+        }
+
+        .tour-btn-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            opacity: 0.85;
+            transition: opacity 0.15s, transform 0.15s;
+            padding: 2px 6px;
+        }
+        .tour-btn-close:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+        .tour-progress-bar-wrap {
+            height: 3.5px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 100%;
+        }
+
+        .tour-progress-bar-fill {
+            height: 100%;
+            background: #38bdf8;
+            transition: width 0.25s ease;
+        }
+
+        .tour-popover-body {
+            padding: 18px 20px 14px 20px;
+        }
+
+        .tour-step-title {
+            margin: 0 0 8px 0;
+            font-size: 1.08rem;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        html.theme-dark .tour-step-title {
+            color: #f8fafc;
+        }
+
+        .tour-step-desc {
+            margin: 0;
+            font-size: 0.88rem;
+            color: #475569;
+            line-height: 1.55;
+            font-weight: 500;
+        }
+
+        html.theme-dark .tour-step-desc {
+            color: #94a3b8;
+        }
+
+        .tour-popover-footer {
+            padding: 12px 20px 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #f1f5f9;
+            background: #f8fafc;
+        }
+
+        html.theme-dark .tour-popover-footer {
+            background: #0f172a;
+            border-top-color: #334155;
+        }
+
+        .tour-btn-skip {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.15s;
+        }
+        .tour-btn-skip:hover {
+            color: #ef4444;
+        }
+
+        .tour-btn-back {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1.5px solid #cbd5e1;
+            background: white;
+            color: #475569;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tour-btn-back:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        html.theme-dark .tour-btn-back {
+            background: #1e293b;
+            border-color: #475569;
+            color: #cbd5e1;
+        }
+        html.theme-dark .tour-btn-back:hover {
+            background: #334155;
+            color: white;
+        }
+
+        .tour-btn-next {
+            padding: 6px 18px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            color: white;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tour-btn-next:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.45);
+        }
+
+        body { color: #111 !important; }
+        
+        /* Premium Page Headings Redesign */
+        h2 {
+            font-size: 1.625rem !important;
+            font-weight: 800 !important;
+            color: #0f172a !important; /* Slate 900 */
+            letter-spacing: -0.025em !important;
+            border-left: 5px solid #4f46e5 !important; /* Indigo accent border */
+            padding-left: 14px !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            line-height: 1.25 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+        }
+
+        .sticky-top {
+            position: -webkit-sticky !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 1030 !important;
+        }
+        /* Sticky Top Nav for pages without sidebar */
+        body.sticky-nav-page .navbar-custom {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+            z-index: 1030 !important;
+        }
+        body.sticky-nav-page .container-main {
+            margin-top: 60px !important; /* Offset by navbar height */
+        }
+        /* Ensure scrolling containers do not break sticky children */
+        #content-wrapper, #content, #wrapper {
+            overflow: visible !important;
+        }
+        .navbar-custom {
+            background: linear-gradient(90deg, #4f46e5 0%, #4338ca 50%, #3730a3 100%) !important;
+            height: 64px !important;
+            padding: 0 20px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.25) !important;
+            z-index: 1030 !important;
+        }
+
+        .navbar-custom .navbar-brand {
+            font-size: 1.15rem !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+            letter-spacing: -0.02em !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 0 !important;
+        }
+
+        .brand-icon-box {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.35) !important;
+            color: #ffffff !important;
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
+            padding: 7px 18px !important;
+            border-radius: 8px !important;
+            font-size: 0.85rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.2px !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+            transition: all 0.2s ease !important;
+            margin-right: 0 !important;
+        }
+
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+            color: #ffffff !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45) !important;
+        }
+
+        .container-main {
+            padding: 20px;
+            background-color: #f8f9fc;
+            min-height: calc(100vh - 64px);
+        }
+
+        .app-sidebar {
+            width: 260px !important;
+            background: linear-gradient(180deg, #4f46e5 0%, #4338ca 50%, #3730a3 100%) !important;
+            flex-shrink: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 4px 0 24px rgba(79, 70, 229, 0.2) !important;
+            min-height: 100vh !important;
+            z-index: 1020 !important;
+        }
+
+        .sidebar-profile {
+            padding: 22px 16px 20px !important;
+            text-align: center !important;
+        }
+
+        .sidebar-logo-container {
+            background: transparent !important;
+        }
+
+        .sidebar-logo-card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 12px;
+            padding: 9px 16px;
+            display: inline-block;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar-logo-card:hover {
+            transform: scale(1.02);
+        }
+
+        .sidebar-brand-text-wrap {
+            background: transparent !important;
+            margin-top: 8px;
+        }
+
+        .sidebar-brand-title {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 1px;
+            background: transparent !important;
+        }
+
+        .sidebar-brand-subtitle {
+            font-size: 0.68rem;
+            color: #c7d2fe;
+            font-weight: 600;
+            line-height: 1.25;
+            margin-top: 2px;
+            background: transparent !important;
+        }
+
+        .sidebar-avatar-ring {
+            display: inline-block;
+            padding: 4px;
+            background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+            margin-bottom: 14px;
+            margin-top: 6px;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .sidebar-avatar-ring:hover {
+            transform: scale(1.04);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-avatar {
+            width: 145px !important;
+            height: 185px !important;
+            border-radius: 17px !important;
+            border: none !important;
+            object-fit: cover !important;
+            display: block !important;
+        }
+
+        .sidebar-name {
+            color: #ffffff !important;
+            font-size: 1.05rem !important;
+            font-weight: 800 !important;
+            line-height: 1.35 !important;
+            letter-spacing: -0.01em !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .sidebar-designation {
+            font-size: 0.8rem !important;
+            color: #e0e7ff !important;
+            font-weight: 600 !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            padding: 3px 12px !important;
+            border-radius: 20px !important;
+            display: inline-block !important;
+            margin-top: 4px !important;
+            margin-bottom: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        }
+
+        .sidebar-role-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.35) !important;
+            font-size: 0.74rem !important;
+            font-weight: 800 !important;
+            padding: 4px 14px !important;
+            border-radius: 20px !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .sidebar-divisions-box {
+            margin-top: 18px !important;
+            padding: 14px 12px !important;
+            background: rgba(255, 255, 255, 0.12) !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .topbar-divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.25);
+            margin: 0 14px;
+        }
+
+        .header-nav-links {
+            gap: 4px;
+        }
+
+        .header-nav-links .nav-link {
+            padding: 7px 14px !important;
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            color: #e0e7ff !important;
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            transition: all 0.2s ease-in-out !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+        }
+
+        .header-nav-links .nav-link:hover {
+            background: rgba(255, 255, 255, 0.18) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1px) !important;
+        }
+
+        .header-nav-links .nav-link.active,
+        .header-nav-links .nav-link.active-tab {
+            background: #ffffff !important;
+            border: 1px solid #ffffff !important;
+            color: #4f46e5 !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .user-welcome-badge {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #ffffff;
+            font-size: 0.84rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .user-welcome-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #4f46e5;
+            font-size: 0.72rem;
+        }
+
+        /* ── Notification Bell ── */
+        .notif-bell-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 14px;
+        }
+        .notif-bell-btn {
+            background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.22);
+            color: white;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s, transform 0.2s;
+            position: relative;
+        }
+        .notif-bell-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.08);
+        }
+        #notifBadge {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 800;
+            min-width: 18px; height: 18px;
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+            border: 2px solid #4f46e5;
+            animation: pulse-badge 1.8s infinite;
+        }
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.18); }
+        }
+        .notif-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 340px;
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(16px);
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(79,70,229,0.12);
+            z-index: 99999;
+            overflow: hidden;
+            display: none;
+            animation: dropIn 0.22s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .notif-dropdown.open { display: block; }
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .notif-drop-header {
+            background: linear-gradient(135deg,#4f46e5,#3730a3);
+            color: white; padding: 12px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-weight: 700; font-size: 0.88rem;
+        }
+        .notif-drop-list { max-height: 280px; overflow-y: auto; }
+        .notif-drop-item {
+            padding: 11px 16px; border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s; cursor: default;
+        }
+        .notif-drop-item:hover { background: #f8fafc; }
+        .notif-drop-sender { font-weight: 700; color: #0f172a; font-size: 0.83rem; }
+        .notif-drop-detail { color: #64748b; font-size: 0.78rem; margin-top: 2px; }
+        .notif-drop-msg {
+            color: #475569; font-size: 0.8rem; margin-top: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .notif-drop-footer {
+            padding: 10px 16px; text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .notif-drop-footer a {
+            color: #4f46e5; font-weight: 700; font-size: 0.85rem;
+            text-decoration: none;
+        }
+        .notif-drop-footer a:hover { text-decoration: underline; }
+        .notif-drop-empty { padding: 24px; text-align: center; color: #94a3b8; font-size: 0.88rem; }
+        
+        /* ==========================================================================
+           TOPBAR ACTIVE MODE ROLE SWITCHER COMPONENT (High-Contrast & Beautiful)
+           ========================================================================== */
+        .topbar-role-dropdown {
+            position: relative;
+            z-index: 1050;
+        }
+
+        .topbar-role-btn {
+            border-radius: 12px !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border: 1px solid rgba(255, 255, 255, 0.32) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            padding: 5px 12px 5px 8px !important;
+            cursor: pointer !important;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            outline: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+            text-decoration: none !important;
+        }
+
+        .topbar-role-btn:hover,
+        .topbar-role-btn:focus {
+            background: rgba(255, 255, 255, 0.28) !important;
+            border-color: rgba(255, 255, 255, 0.55) !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14) !important;
+            transform: translateY(-1px);
+        }
+
+        .topbar-role-icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+        }
+
+        .topbar-role-label-wrap {
+            line-height: 1.15;
+            text-align: left;
+        }
+
+        .topbar-role-sub {
+            display: block;
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #e0e7ff !important;
+            font-weight: 700;
+            opacity: 0.92;
+        }
+
+        .topbar-role-title {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #ffffff !important;
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+        }
+
+        .topbar-role-chevron {
+            font-size: 0.7rem;
+            color: #e0e7ff;
+            transition: transform 0.2s ease;
+            margin-left: 2px;
+        }
+
+        .topbar-role-dropdown.show .topbar-role-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Dropdown Menu Popup */
+        .topbar-role-menu {
+            border-radius: 16px !important;
+            min-width: 330px !important;
+            max-width: 400px !important;
+            padding: 0 !important;
+            margin-top: 10px !important;
+            border: 1px solid rgba(226, 232, 240, 0.95) !important;
+            background: #ffffff !important;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(79, 70, 229, 0.1) !important;
+            overflow: hidden !important;
+            z-index: 1055 !important;
+            animation: roleDropMenuIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+
+        @keyframes roleDropMenuIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .topbar-role-menu-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+            padding: 13px 18px;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .topbar-role-header-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.18);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            color: #ffffff;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .topbar-role-header-title {
+            font-size: 0.86rem;
+            font-weight: 800;
+            color: #ffffff !important;
+            letter-spacing: -0.2px;
+            line-height: 1.2;
+        }
+
+        .topbar-role-header-desc {
+            font-size: 0.72rem;
+            color: #c7d2fe !important;
+            font-weight: 500;
+            margin-top: 1px;
+        }
+
+        .topbar-role-list {
+            padding: 6px 0;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        /* Explicit Item Styling - Immune to Bootstrap Overrides */
+        .topbar-role-item {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 12px 18px !important;
+            text-decoration: none !important;
+            background: #ffffff !important;
+            border-left: 4px solid transparent !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            transition: all 0.18s ease-in-out !important;
+            cursor: pointer !important;
+            gap: 12px;
+        }
+
+        .topbar-role-item:last-child {
+            border-bottom: none !important;
+        }
+
+        .role-item-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .role-item-name {
+            font-size: 0.88rem !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            line-height: 1.25 !important;
+            transition: color 0.18s ease !important;
+        }
+
+        .role-item-desc {
+            font-size: 0.74rem !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+            line-height: 1.3 !important;
+            margin-top: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 175px !important;
+            transition: color 0.18s ease !important;
+        }
+
+        /* Status Badges */
+        .badge-active-role {
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 12px;
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .badge-switch-role {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            flex-shrink: 0;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(4px);
+            transition: all 0.18s ease;
+        }
+
+        /* HOVER STATE - High Contrast and Legibility */
+        .topbar-role-item:hover,
+        .topbar-role-item:focus {
+            background: #f8fafc !important;
+            border-left-color: #4f46e5 !important;
+            text-decoration: none !important;
+        }
+
+        .topbar-role-item:hover .role-item-name {
+            color: #4338ca !important;
+        }
+
+        .topbar-role-item:hover .role-item-desc {
+            color: #334155 !important;
+        }
+
+        .topbar-role-item:hover .role-item-avatar {
+            transform: scale(1.08);
+        }
+
+        .topbar-role-item:hover .badge-switch-role {
+            opacity: 1;
+            transform: translateX(0);
+            background: #ede9fe;
+            color: #4f46e5;
+            border-color: #c7d2fe;
+        }
+
+        /* ACTIVE STATE - Distinct Highlight */
+        .topbar-role-item.is-active {
+            background: #f5f3ff !important;
+            border-left-color: #6366f1 !important;
+        }
+
+        .topbar-role-item.is-active .role-item-name {
+            color: #3730a3 !important;
+            font-weight: 800 !important;
+        }
+
+        .topbar-role-item.is-active .role-item-desc {
+            color: #4f46e5 !important;
+            font-weight: 600 !important;
+        }
+
+        .topbar-role-item.is-active:hover {
+            background: #ede9fe !important;
+        }
+
+        /* DARK MODE OVERRIDES */
+        html.theme-dark .topbar-role-menu {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        }
+
+        html.theme-dark .topbar-role-item {
+            background: #1e293b !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        html.theme-dark .topbar-role-item .role-item-name {
+            color: #f8fafc !important;
+        }
+
+        html.theme-dark .topbar-role-item .role-item-desc {
+            color: #94a3b8 !important;
+        }
+
+        html.theme-dark .topbar-role-item:hover {
+            background: #334155 !important;
+            border-left-color: #818cf8 !important;
+        }
+
+        html.theme-dark .topbar-role-item:hover .role-item-name {
+            color: #ffffff !important;
+        }
+
+        html.theme-dark .topbar-role-item:hover .role-item-desc {
+            color: #cbd5e1 !important;
+        }
+
+        html.theme-dark .topbar-role-item.is-active {
+            background: rgba(99, 102, 241, 0.18) !important;
+            border-left-color: #818cf8 !important;
+        }
+
+        html.theme-dark .topbar-role-item.is-active .role-item-name {
+            color: #c7d2fe !important;
+        }
+
+        html.theme-dark .topbar-role-item.is-active .role-item-desc {
+            color: #a5b4fc !important;
+        }
+        
+        /* Global Elegant Toast Container at Top Right */
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 200000 !important;
+            pointer-events: none;
+        }
+        
+        .modern-toast {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border-radius: 12px;
+            padding: 14px 20px;
+            min-width: 320px;
+            max-width: 420px;
+            color: #1e293b;
+            font-size: 0.92rem;
+            font-weight: 600;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: auto;
+            border-left: 6px solid #64748b;
+        }
+        
+        .modern-toast.toast-show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .modern-toast.toast-hide {
+            transform: translateY(-20px) scale(0.9);
+            opacity: 0;
+        }
+        
+        .toast-icon {
+            font-size: 1.35rem;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Toast Alert States with Curated Color Accents */
+        .toast-success {
+            border-left-color: #10b981;
+            background: rgba(240, 253, 250, 0.95);
+        }
+        .toast-success .toast-icon {
+            color: #10b981;
+        }
+        
+        .toast-error {
+            border-left-color: #ef4444;
+            background: rgba(254, 242, 242, 0.95);
+        }
+        .toast-error .toast-icon {
+            color: #ef4444;
+        }
+        
+        .toast-warning {
+            border-left-color: #f59e0b;
+            background: rgba(255, 251, 235, 0.95);
+        }
+        .toast-warning .toast-icon {
+            color: #f59e0b;
+        }
+        
+        .toast-info {
+            border-left-color: #3b82f6;
+            background: rgba(239, 246, 255, 0.95);
+        }
+        .toast-info .toast-icon {
+            color: #3b82f6;
+        }
+        
+        .toast-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 2px;
+            line-height: 1;
+            transition: color 0.15s ease;
+            margin-left: auto;
+        }
+        .toast-close-btn:hover {
+            color: #475569;
+        }
+    </style>
+    <script>
+        // FOUC Prevention: Apply theme class before paint (Light mode by default)
+        (function(){
+            var t = localStorage.getItem('app-theme');
+            if (t === 'dark') document.documentElement.classList.add('theme-dark');
+            else document.documentElement.classList.add('theme-light');
+        })();
+    </script>
+    <script>
+        // Global Upgraded Toast Notification System
+        function showToast(msg, type = 'info') {
+            let container = document.getElementById("toast-container");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "toast-container";
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement("div");
+            toast.className = `modern-toast toast-${type}`;
+            
+            let iconClass = "fas fa-info-circle";
+            if (type === "success") iconClass = "fas fa-check-circle";
+            else if (type === "warning") iconClass = "fas fa-exclamation-triangle";
+            else if (type === "error") iconClass = "fas fa-times-circle";
+
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="${iconClass}"></i></div>
+                <div style="flex-grow: 1; padding-right: 8px;">${msg}</div>
+                <button type="button" class="toast-close-btn" onclick="this.parentElement.classList.remove('toast-show'); setTimeout(() => this.parentElement.remove(), 400);">&times;</button>
+            `;
+
+            container.appendChild(toast);
+            
+            // Trigger reflow to run transition
+            toast.offsetHeight;
+            toast.classList.add("toast-show");
+
+            // Auto dismiss
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.remove("toast-show");
+                    toast.classList.add("toast-hide");
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 400);
+                }
+            }, 4000);
+        }
+    </script>
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server"></asp:ContentPlaceHolder>
+</head>
+<%
+    string bodyClass = "";
+    string rawUrl = Request.RawUrl.ToLower();
+    if (rawUrl.Contains("attendance.aspx")) {
+        bodyClass = "attendance-page";
+    } else if (rawUrl.Contains("dashboard.aspx") || rawUrl.Contains("dashboard")) {
+        bodyClass = "dashboard-page";
+    } else {
+        bodyClass = "sticky-nav-page";
+    }
+%>
+<body id="page-top" class="<%= bodyClass %>">
+    <form id="form1" runat="server" enctype="multipart/form-data">
+        <div id="wrapper" class="d-flex">
+            <!-- Sidebar -->
+            <asp:PlaceHolder ID="phSidebar" runat="server">
+                <div class="app-sidebar">
+                    <!-- Profile block -->
+                    <div class="sidebar-profile">
+                        <div class="sidebar-logo-container" style="text-align: center; margin-bottom: 12px;">
+                            <div class="sidebar-logo-card">
+                                <img src="Static/Images/newlrdelogo.png" alt="LRDE Logo" style="max-width: 110px; height: auto; display: block; margin: 0 auto;" />
+                            </div>
+                            <div class="sidebar-brand-text-wrap">
+                                <div class="sidebar-brand-title">ARS</div>
+                                <div class="sidebar-brand-subtitle">Attendance Recording System<br />(Skilled, Semi-Skilled)</div>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid rgba(255, 255, 255, 0.12); margin: 12px 0 16px;"></div>
+                        
+                        <div class="sidebar-avatar-ring">
+                            <img src="http://windflower.lrde.com/empphotos/Dsc_<%=Session["PCNO"]%>.jpg"
+                                  id="imgavtr" class="sidebar-avatar" alt="Avatar"
+                                  onerror="this.onerror=null; this.src='Static/Images/default_avatar.png';" />
+                        </div>
+
+                        <div class="sidebar-name">
+                            <%=Session["Name"] != null ? Session["Name"].ToString() : "User" %>
+                        </div>
+                        <% if (Session["Designation"] != null && !string.IsNullOrEmpty(Session["Designation"].ToString())) { %>
+                        <div class="sidebar-designation">
+                            <%=Session["Designation"].ToString() %>
+                        </div>
+                        <% } %>
+                        <div>
+                            <span class="sidebar-role-badge">
+                                <i id="myfw" runat="server" class="fas fa-user"></i>&nbsp;<label runat="server" id="lblUserName" style="margin-bottom:0;"></label>
+                            </span>
+                        </div>
+                        <% int sideRole = Session["Role"] != null ? Convert.ToInt32(Session["Role"]) : 0;
+                           string sideRoleMode = Session["RoleMode"] != null ? Session["RoleMode"].ToString() : "";
+                           if (sideRole == 0 || sideRole == 6 || sideRoleMode == "SubUser") { %>
+                        <!-- Accessible Divisions & Scopes Card for Regular User (POC) & Sub User -->
+                        <div class="sidebar-divisions-box">
+                            <% if (sideRole == 6 || sideRoleMode == "SubUser") { %>
+                                <% if (UserAnchorPocs != null && UserAnchorPocs.Count > 0) { %>
+                                <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #fde68a; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-anchor" style="color: #f59e0b; font-size: 0.8rem;"></i> Anchor POC(s)
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px;">
+                                    <% foreach (var poc in UserAnchorPocs) { %>
+                                        <span class="badge" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(217, 119, 6, 0.45)); color: #ffffff; border: 1px solid rgba(253, 230, 138, 0.4); font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas fa-user-check" style="font-size: 0.65rem; color: #fde68a;"></i> <%= poc %>
+                                        </span>
+                                    <% } %>
+                                </div>
+                                <% } %>
+                            <% } %>
+
+                            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-building" style="color: #60a5fa; font-size: 0.8rem;"></i> Accessible Divisions
+                            </div>
+                            <% if (UserAllowedDivisions != null && UserAllowedDivisions.Count > 0) { %>
+                                <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                    <% foreach (var div in UserAllowedDivisions) { %>
+                                        <span class="badge" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(37, 99, 235, 0.45)); color: #ffffff; border: 1px solid rgba(147, 197, 253, 0.4); font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            <i class="fas fa-sitemap" style="font-size: 0.65rem; color: #bfdbfe;"></i> <%= div %>
+                                        </span>
+                                    <% } %>
+                                </div>
+                            <% } else { %>
+                                <div style="font-size: 0.78rem; color: #cbd5e1; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 2px 0;">
+                                    <i class="fas fa-globe" style="color: #60a5fa;"></i> All Divisions Access
+                                </div>
+                            <% } %>
+
+                            <% if (UserAllowedCategories != null && UserAllowedCategories.Count > 0) { %>
+                            <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: #93c5fd; font-weight: 800; margin-top: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-tags" style="color: #60a5fa; font-size: 0.8rem;"></i> Accessible Categories
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                <% foreach (var cat in UserAllowedCategories) { %>
+                                    <span class="badge" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(5, 150, 105, 0.45)); color: #ffffff; border: 1px solid rgba(167, 243, 208, 0.4); font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        <i class="fas fa-layer-group" style="font-size: 0.65rem; color: #a7f3d0;"></i> <%= cat %>
+                                    </span>
+                                <% } %>
+                            </div>
+                            <% } %>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            </asp:PlaceHolder>
+
+            <!-- Content Wrapper -->
+            <div id="content-wrapper" class="d-flex flex-column flex-grow-1">
+                <!-- Main Content -->
+                <div id="content">
+                    <!-- Topbar -->
+                    <nav class="navbar navbar-expand navbar-light topbar <%= Request.RawUrl.ToLower().Contains("attendance.aspx") ? "static-top" : "sticky-top" %> navbar-custom">
+                        <% bool isDash = Request.RawUrl.ToLower().Contains("dashboard.aspx"); %>
+                        <% if (isDash) { %>
+                        <a class="navbar-brand text-decoration-none" href="Dashboard.aspx" title="Attendance Recording System (Skilled, Semi-Skilled)">
+                            <span class="brand-icon-box"><i class="fas fa-users-cog"></i></span>
+                            <span class="font-weight-bold d-none d-sm-inline" style="letter-spacing: 0.3px;">Attendance Recording System (Skilled, Semi-Skilled)</span>
+                            <span class="font-weight-bold d-inline d-sm-none" style="letter-spacing: 0.5px;">ARS</span>
+                        </a>
+                        <% } else { %>
+                        <a class="navbar-brand text-decoration-none" href="Dashboard.aspx" title="Attendance Recording System (Skilled, Semi-Skilled) (ARS)">
+                            <span class="brand-icon-box"><i class="fas fa-users-cog"></i></span>
+                            <span class="font-weight-bold" style="letter-spacing: 0.5px;">ARS</span>
+                        </a>
+                        <% } %>
+
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                        <!-- Top Navigation Links (visible only on non-dashboard pages) -->
+                        <asp:PlaceHolder ID="phTopNav" runat="server">
+                            <ul class="navbar-nav mr-auto align-items-center header-nav-links">
+                                <li class="nav-item">
+                                    <a class='<%= GetNavClass("Dashboard.aspx") %>' href="Dashboard.aspx"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                                </li>
+                                <asp:PlaceHolder ID="phEmployeeMaster" runat="server">
+                                    <li class="nav-item">
+                                        <a class='<%= GetNavClass("Employee.aspx") %>' href="Employee.aspx"><i class="fas fa-users"></i> Employee Master</a>
+                                    </li>
+                                </asp:PlaceHolder>
+                                <li class="nav-item">
+                                    <a class='<%= GetNavClass("Attendance.aspx") %>' href="Attendance.aspx">
+                                        <i class="fas fa-calendar-check"></i> Attendance
+                                        <% if (PendingDraftCount > 0) { %>
+                                            <span class="badge" style="font-size:0.68rem; background:#f59e0b; color:#fff; border-radius:10px; padding:2px 6px; margin-left:4px; font-weight:800;" title="<%= PendingDraftCount %> pending draft records to review"><%= PendingDraftCount %></span>
+                                        <% } %>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class='<%= GetNavClass("Ledger.aspx") %>' href="Ledger.aspx"><i class="fas fa-book"></i> Ledger</a>
+                                </li>
+                                <asp:PlaceHolder ID="phCalculation" runat="server">
+                                    <li class="nav-item">
+                                        <a class='<%= GetNavClass("Calculation.aspx") %>' href="Calculation.aspx"><i class="fas fa-calculator"></i> Calculation</a>
+                                    </li>
+                                </asp:PlaceHolder>
+                                <asp:PlaceHolder ID="phNavAdminLinks" runat="server">
+                                    <li class="nav-item">
+                                        <a class='<%= GetNavClass("Remarks.aspx") %>' href="Remarks.aspx"><i class="fas fa-inbox"></i> Remarks</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class='<%= GetNavClass("Documents.aspx") %>' href="Documents.aspx"><i class="fas fa-file-alt"></i> Documents</a>
+                                    </li>
+                                </asp:PlaceHolder>
+                            </ul>
+                        </asp:PlaceHolder>
+
+                        <!-- Topbar User Information -->
+                        <ul class="navbar-nav ml-auto align-items-center" style="gap: 10px;">
+                            <asp:PlaceHolder ID="phStartTour" runat="server">
+                                <li class="nav-item">
+                                    <button type="button" id="startTourBtn" class="theme-toggle-btn" onclick="triggerSiteTour()" title="Start Interactive Welcome Tour">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
+                                </li>
+                            </asp:PlaceHolder>
+                            <li class="nav-item">
+                                <button type="button" id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleAppTheme()" title="Toggle Dark/Light Mode">
+                                    <i class="fas fa-moon" id="themeIcon"></i>
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <div class="user-welcome-badge">
+                                    <span class="user-welcome-icon"><i class="fas fa-user"></i></span>
+                                    <span>Welcome, <%=Session["Name"] %><%= Session["Designation"] != null && !string.IsNullOrEmpty(Session["Designation"].ToString()) ? " (" + Session["Designation"].ToString() + ")" : "" %></span>
+                                </div>
+                            </li>
+                            <% if (AvailableUserRoles != null && AvailableUserRoles.Count > 1) { %>
+                                <li class="nav-item">
+                                    <div class="dropdown topbar-role-dropdown">
+                                        <button class="btn btn-sm topbar-role-btn d-flex align-items-center" type="button" id="topbarRoleDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onclick="toggleTopRoleDropdown(event)" title="Switch Active Mode">
+                                            <span class="topbar-role-icon-box" style='background: <%= GetRoleBadgeBg(CurrentRoleMode) %>;'>
+                                                <i class="<%= CurrentRoleIcon %>" style='color: <%= GetRoleBadgeColor(CurrentRoleMode) %>;'></i>
+                                            </span>
+                                            <div class="text-left topbar-role-label-wrap">
+                                                <span class="topbar-role-sub">Active Mode</span>
+                                                <span class="topbar-role-title"><%= CurrentRoleTitle %></span>
+                                            </div>
+                                            <i class="fas fa-chevron-down topbar-role-chevron"></i>
+                                        </button>
+
+                                        <div class="dropdown-menu dropdown-menu-right topbar-role-menu" aria-labelledby="topbarRoleDropdown">
+                                            <div class="topbar-role-menu-header">
+                                                <div class="d-flex align-items-center">
+                                                    <span class="topbar-role-header-icon"><i class="fas fa-random"></i></span>
+                                                    <div>
+                                                        <div class="topbar-role-header-title">Switch Active Role</div>
+                                                        <div class="topbar-role-header-desc">Select workspace mode to operate in</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="topbar-role-list">
+                                                <% foreach (var rOpt in AvailableUserRoles) { 
+                                                    bool isCur = string.Equals(rOpt.RoleMode, CurrentRoleMode, StringComparison.OrdinalIgnoreCase);
+                                                    string switchHref = Request.Url.AbsolutePath + "?switchRole=" + rOpt.RoleMode;
+                                                %>
+                                                    <a href="<%= switchHref %>" class='topbar-role-item <%= isCur ? "is-active" : "" %>'>
+                                                        <div class="d-flex align-items-center" style="gap: 12px; min-width: 0;">
+                                                            <div class="role-item-avatar" style='background: <%= rOpt.BadgeColor %>18; border: 1.5px solid <%= rOpt.BadgeColor %>40;'>
+                                                                <i class="<%= rOpt.Icon %>" style='color: <%= rOpt.BadgeColor %>;'></i>
+                                                            </div>
+                                                            <div class="role-item-text" style="min-width: 0;">
+                                                                <div class="role-item-name"><%= rOpt.Title %></div>
+                                                                <div class="role-item-desc" title="<%= rOpt.Subtitle %>"><%= rOpt.Subtitle %></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="role-item-status">
+                                                            <% if (isCur) { %>
+                                                                <span class="badge-active-role"><i class="fas fa-check"></i> Active</span>
+                                                            <% } else { %>
+                                                                <span class="badge-switch-role">Switch <i class="fas fa-arrow-right ml-1"></i></span>
+                                                            <% } %>
+                                                        </div>
+                                                    </a>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            <% } %>
+                            <%-- Notification bell (admin only) --%>
+                            <asp:PlaceHolder ID="phNotifBell" runat="server">
+                                <li class="nav-item">
+                                    <div class="notif-bell-wrap">
+                                        <button type="button" class="notif-bell-btn" id="notifBellBtn" onclick="toggleNotifDrop(event)" title="Remarks Notifications">
+                                            <i class="fas fa-bell"></i>
+                                            <span id="notifBadge" style="<%= UnreadCount > 0 ? "" : "display:none;" %>"><%= UnreadCount %></span>
+                                        </button>
+                                        <div class="notif-dropdown" id="notifDropdown">
+                                            <div class="notif-drop-header">
+                                                <span><i class="fas fa-inbox mr-2"></i>Remarks Inbox</span>
+                                                <span id="notifUnreadLabel"><%= UnreadCount %> unread</span>
+                                            </div>
+                                            <div class="notif-drop-list" id="notifDropList">
+                                                <div class="notif-drop-empty"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+                                            </div>
+                                            <div class="notif-drop-footer">
+                                                <a href="Remarks.aspx"><i class="fas fa-external-link-alt mr-1"></i>View all in Remarks Inbox</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </asp:PlaceHolder>
+                            <li class="nav-item">
+                                <asp:LinkButton ID="btnLogout" runat="server" CssClass="btn-logout" OnClick="btnLogout_Click" OnClientClick="var _t=localStorage.getItem('app-theme'); localStorage.clear(); if(_t) localStorage.setItem('app-theme',_t); sessionStorage.clear();" CausesValidation="false">
+                                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                                </asp:LinkButton>
+                            </li>
+                        </ul>
+                    </nav>
+                    <!-- End of Topbar -->
+
+                    <!-- Begin Page Content -->
+                    <div class="container-main">
+                        <asp:ContentPlaceHolder ID="MainContent" runat="server"></asp:ContentPlaceHolder>
+                    </div>
+                </div>
+                <!-- End of Main Content -->
+            </div>
+        </div>
+
+        <!-- Bootstrap core JavaScript-->
+        <script src="Static/jquery/jquery.min.js"></script>
+        <script src="Static/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <!-- Core plugin JavaScript-->
+        <script src="Static/jquery-easing/jquery.easing.min.js"></script>
+        <!-- Custom scripts for all pages-->
+        <script src="Static/js/sb-admin-2.min.js"></script>
+        <script src="Static/js/sweetalert2@11.js"></script>
+        <% int jsRole = Convert.ToInt32(Session["Role"] ?? 0);
+           if (jsRole == 1 || jsRole == 4) { %>
+        <script>
+            (function () {
+                var dropLoaded = false;
+
+                window.toggleNotifDrop = function (e) {
+                    e.stopPropagation();
+                    var drop = document.getElementById('notifDropdown');
+                    if (!drop) return;
+                    var isOpen = drop.classList.contains('open');
+                    if (isOpen) {
+                        drop.classList.remove('open');
+                    } else {
+                        drop.classList.add('open');
+                        if (!dropLoaded) { loadNotifDrop(); dropLoaded = true; }
+                    }
+                };
+
+                document.addEventListener('click', function (e) {
+                    var wrap = document.getElementById('notifBellBtn');
+                    var drop = document.getElementById('notifDropdown');
+                    if (drop && drop.classList.contains('open')) {
+                        if (!drop.contains(e.target) && e.target !== wrap && !wrap.contains(e.target)) {
+                            drop.classList.remove('open');
+                        }
+                    }
+                });
+
+                function loadNotifDrop() {
+                    fetch('Remarks.aspx/GetAllRemarks', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: '{}'
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        var all = JSON.parse(data.d);
+                        var unread = all.filter(function (r) { return !r.IsRead; });
+                        var listEl = document.getElementById('notifDropList');
+                        var badge  = document.getElementById('notifBadge');
+                        var label  = document.getElementById('notifUnreadLabel');
+
+                        if (badge)  { badge.textContent = unread.length; badge.style.display = unread.length > 0 ? 'flex' : 'none'; }
+                        if (label)  { label.textContent = unread.length + ' unread'; }
+
+                        var preview = unread.slice(0, 5);
+                        if (preview.length === 0) {
+                            listEl.innerHTML = '<div class="notif-drop-empty"><i class="fas fa-check-circle" style="color:#10b981;"></i> No unread remarks</div>';
+                        } else {
+                            listEl.innerHTML = preview.map(function (r) {
+                                return '<div class="notif-drop-item">'
+                                    + '<div class="notif-drop-sender"><i class="fas fa-user mr-1" style="color:#4f46e5;"></i>' + esc(r.SenderName) + '</div>'
+                                    + '<div class="notif-drop-detail">Re: ' + esc(r.EmpName) + ' &bull; ' + esc(r.RemarkDateStr) + '</div>'
+                                    + '<div class="notif-drop-msg">' + esc(r.Message) + '</div>'
+                                    + '</div>';
+                            }).join('');
+                        }
+                    })
+                    .catch(function () {
+                        var listEl = document.getElementById('notifDropList');
+                        if (listEl) listEl.innerHTML = '<div class="notif-drop-empty">Failed to load.</div>';
+                    });
+                }
+
+                function esc(s) {
+                    if (!s) return '';
+                    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                }
+            })();
+        </script>
+        <% } %>
+        <script>
+            // Topbar Role Switcher Dropdown Toggle Handlers
+            window.toggleTopRoleDropdown = function (e) {
+                e.stopPropagation();
+                var wrap = e.currentTarget.closest('.topbar-role-dropdown');
+                if (!wrap) return;
+                var menu = wrap.querySelector('.topbar-role-menu');
+                if (menu) {
+                    var isOpen = menu.classList.contains('show');
+                    // Close all other dropdowns
+                    document.querySelectorAll('.topbar-role-dropdown.show, .topbar-role-menu.show').forEach(function (m) {
+                        m.classList.remove('show');
+                    });
+                    if (!isOpen) {
+                        wrap.classList.add('show');
+                        menu.classList.add('show');
+                    }
+                }
+            };
+
+            document.addEventListener('click', function (e) {
+                var openWraps = document.querySelectorAll('.topbar-role-dropdown.show');
+                openWraps.forEach(function (w) {
+                    if (!w.contains(e.target)) {
+                        w.classList.remove('show');
+                        var m = w.querySelector('.topbar-role-menu');
+                        if (m) m.classList.remove('show');
+                    }
+                });
+            });
+
+            // Theme Toggle Function
+            function toggleAppTheme() {
+                var html = document.documentElement;
+                var icon = document.getElementById('themeIcon');
+                if (html.classList.contains('theme-dark')) {
+                    html.classList.remove('theme-dark');
+                    html.classList.add('theme-light');
+                    localStorage.setItem('app-theme', 'light');
+                    if (icon) { icon.className = 'fas fa-moon'; }
+                } else {
+                    html.classList.remove('theme-light');
+                    html.classList.add('theme-dark');
+                    localStorage.setItem('app-theme', 'dark');
+                    if (icon) { icon.className = 'fas fa-sun'; }
+                }
+            }
+            // Set correct icon on page load
+            (function() {
+                var icon = document.getElementById('themeIcon');
+                if (icon) {
+                    if (document.documentElement.classList.contains('theme-dark')) {
+                        icon.className = 'fas fa-sun';
+                    } else {
+                        icon.className = 'fas fa-moon';
+                    }
+                }
+            })();
+
+            // High-Performance Interactive Welcome Tour Engine
+            function triggerSiteTour() {
+                if (window.location.pathname.indexOf('Dashboard.aspx') === -1) {
+                    window.location.href = 'Dashboard.aspx?startTour=true';
+                } else {
+                    startWelcomeTour();
+                }
+            }
+
+            var currentTourStep = 0;
+            var activeSteps = [];
+
+            function ensureTourElements() {
+                var ring = document.getElementById('tourSpotlightRing');
+                if (!ring) {
+                    ring = document.createElement('div');
+                    ring.id = 'tourSpotlightRing';
+                    document.body.appendChild(ring);
+                }
+
+                var tooltip = document.getElementById('tourTooltipPopover');
+                if (!tooltip) {
+                    tooltip = document.createElement('div');
+                    tooltip.id = 'tourTooltipPopover';
+                    document.body.appendChild(tooltip);
+                }
+            }
+
+            function startWelcomeTour() {
+                endTour();
+                ensureTourElements();
+
+                var tourSteps = [
+                    // 1. Overview Header
+                    {
+                        selector: '.dashboard-header-title',
+                        fallbackSelector: '.navbar-brand',
+                        tag: 'System Overview',
+                        icon: 'fas fa-tachometer-alt',
+                        iconColor: '#4f46e5',
+                        title: 'Attendance Recording System (ARS)',
+                        text: 'Welcome to ARS! This enterprise platform manages contract employee profiles, daily attendance logs, wage calculations, statutory compliance, and official certificates.'
+                    },
+                    // 2. User Profile Badge (Top Bar)
+                    {
+                        selector: '.user-welcome-badge',
+                        tag: 'User Profile',
+                        icon: 'fas fa-user-circle',
+                        iconColor: '#0ea5e9',
+                        title: 'User Profile & Designation',
+                        text: 'Displays your logged-in username and official designation. Your session credentials govern the modules and administrative capabilities available across the application.'
+                    },
+                    // 2b. Assigned Scopes & Divisions (Sidebar, POC/SubUser only)
+                    {
+                        selector: '.sidebar-divisions-box',
+                        tag: 'Access Scopes',
+                        icon: 'fas fa-shield-alt',
+                        iconColor: '#10b981',
+                        title: 'Assigned Work Scopes',
+                        text: 'Displays your assigned Divisions, Categories, or Anchor POCs. All employee records and attendance entry grids are strictly filtered according to these permissions.'
+                    },
+                    // 3. Multi-Role Switcher
+                    {
+                        selector: '#topbarRoleDropdown',
+                        tag: 'Multi-Role Workspace',
+                        icon: 'fas fa-random',
+                        iconColor: '#8b5cf6',
+                        title: 'Active Mode Switcher',
+                        text: 'If you hold multiple permissions (e.g. Primary Admin, Secondary Admin, POC, or Sub User), switch between workspaces seamlessly without logging out.'
+                    },
+                    // 4. Notification Center (Admin only)
+                    {
+                        selector: '#notifBellBtn',
+                        tag: 'Remarks & Alerts',
+                        icon: 'fas fa-bell',
+                        iconColor: '#f59e0b',
+                        title: 'Remarks Notification Inbox',
+                        text: 'Admins receive real-time alerts when POCs or contract staff submit attendance corrections, leave requests, or general inquiries.'
+                    },
+                    // 5. Theme Toggle
+                    {
+                        selector: '#themeToggleBtn',
+                        tag: 'Appearance',
+                        icon: 'fas fa-moon',
+                        iconColor: '#6366f1',
+                        title: 'Dark & Light Mode Toggle',
+                        text: 'Switch instantly between sleek Dark Mode and clean Light Mode. Your theme preference is preserved automatically across sessions.'
+                    },
+                    // 6. Notice Banner (if active)
+                    {
+                        selector: '.notice-alert-banner',
+                        tag: 'Announcements',
+                        icon: 'fas fa-bullhorn',
+                        iconColor: '#10b981',
+                        title: 'Official Announcements',
+                        text: 'Important institutional notices and circulars appear here for prompt attention and review.'
+                    },
+
+                    // ── ADMIN & SUPER ADMIN CAROUSEL MODULES ──
+                    // Page 1: Daily Operations
+                    {
+                        selector: '#page1 a[href="Employee.aspx"]',
+                        tag: 'Daily Operations',
+                        icon: 'fas fa-users',
+                        iconColor: '#6366f1',
+                        title: 'Employee Master',
+                        text: 'Register and update contract worker profiles, assign wage categories, manage engagements, and track qualification records.',
+                        beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(0, true); }
+                    },
+                    {
+                        selector: '#page1 a[href="Attendance.aspx"]',
+                        tag: 'Daily Operations',
+                        icon: 'fas fa-calendar-check',
+                        iconColor: '#10b981',
+                        title: 'Mark Daily Attendance',
+                        text: 'Record daily attendance, review Sub-User and POC draft submissions, mark leaves, apply 2nd/4th Saturday rules, and commit monthly shift records.',
+                        beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(0, true); }
+                    },
+                    {
+                        selector: '#page1 a[href="Ledger.aspx"]',
+                        tag: 'Daily Operations',
+                        icon: 'fas fa-book',
+                        iconColor: '#0ea5e9',
+                        title: 'Leave Ledgers',
+                        text: 'Track real-time CL/RH leave balances, historical attendance logs, and compliant adjustments for every worker.',
+                        beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(0, true); }
+                    },
+                    {
+                        selector: '#page1 a[href="Remarks.aspx"]',
+                        tag: 'Daily Operations',
+                        icon: 'fas fa-comment-dots',
+                        iconColor: '#d946ef',
+                        title: 'Remarks Inbox',
+                        text: 'Review, approve, and resolve attendance corrections and operational feedback submitted by POCs.',
+                        beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(0, true); }
+                    },
+
+                    // Page 2: Periodic Tasks & Notices
+                    {
+                        selector: '#page2 a[href="Calculation.aspx"]',
+                        tag: 'Periodic Tasks',
+                        icon: 'fas fa-calculator',
+                        iconColor: '#f59e0b',
+                        title: 'Wage Calculation Engine',
+                        text: 'Compute monthly basic wages, statutory EPF (with wage ceiling limits), ESI contributions, service charges, and GST statements.',
+                        beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(1, true); }
+                    },
+                    {
+                        selector: '#page2 a[href="Documents.aspx"]',
+                        tag: 'Periodic Tasks',
+                        icon: 'fas fa-file-alt',
+                        iconColor: '#475569',
+                        title: 'Documents & Certificates Hub',
+                        text: 'Generate official covering letters, wage sheets, satisfactory performance certificates, and export Excel bundles.',
+                        beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(1, true); }
+                    },
+                    {
+                        selector: '#page2 a[href="Notices.aspx"]',
+                        tag: 'Periodic Tasks',
+                        icon: 'fas fa-bullhorn',
+                        iconColor: '#059669',
+                        title: 'Notices & Circulars',
+                        text: 'Publish, categorize, and archive company circulars, policy notifications, and announcements.',
+                        beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(1, true); }
+                    },
+
+                    // Page 3: System Administration & Service Providers
+                    {
+                        selector: '#page3 a[href="AdminManagement.aspx"]',
+                        tag: 'Administration',
+                        icon: 'fas fa-user-shield',
+                        iconColor: '#f43f5e',
+                        title: 'Admin Management',
+                        text: 'Configure administrator accounts, assign primary/secondary admin roles, and grant category sharing permissions.',
+                        beforeStep: function() { 
+                            window.dashboardGoToPage && window.dashboardGoToPage(2, true);
+                            window.dashboardResetServiceProvider && window.dashboardResetServiceProvider(true);
+                        }
+                    },
+                    {
+                        selector: '#page3 a[href="Settings.aspx"]',
+                        tag: 'Administration',
+                        icon: 'fas fa-cog',
+                        iconColor: '#475569',
+                        title: 'System Settings',
+                        text: 'Manage master categories, directorates, divisions, edit windows, automated backups, and system parameters.',
+                        beforeStep: function() { 
+                            window.dashboardGoToPage && window.dashboardGoToPage(2, true);
+                            window.dashboardResetServiceProvider && window.dashboardResetServiceProvider(true);
+                        }
+                    },
+                    {
+                        selector: '#cardServiceProviderMaster',
+                        tag: 'Administration',
+                        icon: 'fas fa-briefcase',
+                        iconColor: '#d97706',
+                        title: 'Service Provider Suite',
+                        text: 'Manage contracting agencies (Vendors), GeM contract periods, and statutory wage order structures.',
+                        beforeStep: function() { 
+                            window.dashboardGoToPage && window.dashboardGoToPage(2, true);
+                            window.dashboardResetServiceProvider && window.dashboardResetServiceProvider(true);
+                        }
+                    },
+
+                    // ── REGULAR USER (POC) & SUB USER WORKSPACE MODULES (Single Page) ──
+                    {
+                        selector: '.dashboard-section a[href="Attendance.aspx"]',
+                        tag: 'My Workspace',
+                        icon: 'fas fa-calendar-check',
+                        iconColor: '#10b981',
+                        title: 'Attendance Workspace',
+                        text: 'Mark daily attendance, submit drafts for admin approval, and manage shift logs within allowed edit windows.'
+                    },
+                    {
+                        selector: '.dashboard-section a[href="Ledger.aspx"]',
+                        tag: 'My Workspace',
+                        icon: 'fas fa-book',
+                        iconColor: '#0ea5e9',
+                        title: 'Leave Ledgers',
+                        text: 'View leave history, accumulated balances, and approved absences for your team.'
+                    },
+                    {
+                        selector: '.dashboard-section a[href="Notices.aspx"]',
+                        tag: 'My Workspace',
+                        icon: 'fas fa-bullhorn',
+                        iconColor: '#10b981',
+                        title: 'Company Notices',
+                        text: 'Stay up to date with institutional announcements, guidelines, and office circulars.'
+                    },
+                    {
+                        selector: '.dashboard-section a[href="UserRemarks.aspx"]',
+                        tag: 'My Workspace',
+                        icon: 'fas fa-comment-alt',
+                        iconColor: '#6366f1',
+                        title: 'My Attendance Remarks',
+                        text: 'Send attendance correction requests or general inquiries directly to administrators with live status tracking.'
+                    }
+                ];
+
+                activeSteps = tourSteps.filter(function(step) {
+                    var el = document.querySelector(step.selector) || (step.fallbackSelector ? document.querySelector(step.fallbackSelector) : null);
+                    return !!el;
+                });
+
+                if (activeSteps.length === 0) return;
+
+                currentTourStep = 0;
+                document.addEventListener('keydown', onTourKeyDown);
+                window.addEventListener('resize', repositionCurrentStep);
+                renderTourStep();
+            }
+
+            function onTourKeyDown(e) {
+                if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                    e.preventDefault();
+                    nextTourStep();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    prevTourStep();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    endTour();
+                }
+            }
+
+            function applyTourSpotlight(targetEl, step) {
+                var ring = document.getElementById('tourSpotlightRing');
+                var tooltip = document.getElementById('tourTooltipPopover');
+                if (!ring || !tooltip || !targetEl) return;
+
+                var rect = targetEl.getBoundingClientRect();
+                var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+                var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                var pad = 6;
+                ring.style.top = (rect.top + scrollTop - pad) + 'px';
+                ring.style.left = (rect.left + scrollLeft - pad) + 'px';
+                ring.style.width = (rect.width + (pad * 2)) + 'px';
+                ring.style.height = (rect.height + (pad * 2)) + 'px';
+                ring.style.borderRadius = window.getComputedStyle(targetEl).borderRadius || '16px';
+                ring.style.display = 'block';
+
+                if (step) {
+                    var totalSteps = activeSteps.length;
+                    var isLast = currentTourStep === totalSteps - 1;
+
+                    var popoverHtml = 
+                        '<div class="tour-popover-header">' +
+                            '<div style="display: flex; align-items: center; gap: 8px;">' +
+                                '<span class="tour-tag-badge">' + esc(step.tag || 'Module') + '</span>' +
+                                '<span class="tour-step-counter">' + (currentTourStep + 1) + ' of ' + totalSteps + '</span>' +
+                            '</div>' +
+                            '<button type="button" class="tour-btn-close" onclick="endTour()" title="Exit Tour"><i class="fas fa-times"></i></button>' +
+                        '</div>' +
+                        '<div class="tour-progress-bar-wrap"><div class="tour-progress-bar-fill" style="width: ' + (((currentTourStep + 1) / totalSteps) * 100) + '%;"></div></div>' +
+                        '<div class="tour-popover-body">' +
+                            '<h5 class="tour-step-title"><i class="' + (step.icon || 'fas fa-info-circle') + '" style="color: ' + (step.iconColor || '#4f46e5') + ';"></i> ' + esc(step.title) + '</h5>' +
+                            '<p class="tour-step-desc">' + esc(step.text) + '</p>' +
+                        '</div>' +
+                        '<div class="tour-popover-footer">' +
+                            '<button type="button" class="tour-btn-skip" onclick="endTour()">Skip Tour</button>' +
+                            '<div style="display: flex; gap: 8px;">' +
+                                (currentTourStep > 0 ? '<button type="button" class="tour-btn-back" onclick="prevTourStep()"><i class="fas fa-chevron-left mr-1"></i> Back</button>' : '') +
+                                '<button type="button" class="tour-btn-next" onclick="nextTourStep()">' + (isLast ? '<i class="fas fa-check mr-1"></i> Finish' : 'Next <i class="fas fa-chevron-right ml-1"></i>') + '</button>' +
+                            '</div>' +
+                        '</div>';
+
+                    tooltip.innerHTML = popoverHtml;
+                    tooltip.style.display = 'block';
+                }
+
+                var tipW = 360;
+                var tipH = tooltip.offsetHeight || 220;
+                var tTop = rect.bottom + scrollTop + 14;
+                var tLeft = rect.left + scrollLeft + (rect.width / 2) - (tipW / 2);
+
+                if (tLeft < 16) tLeft = 16;
+                if (tLeft + tipW > window.innerWidth - 16) tLeft = window.innerWidth - tipW - 16;
+
+                if (rect.bottom + tipH + 20 > window.innerHeight && rect.top > tipH + 20) {
+                    tTop = rect.top + scrollTop - tipH - 14;
+                }
+
+                tooltip.style.top = tTop + 'px';
+                tooltip.style.left = tLeft + 'px';
+            }
+
+            function repositionCurrentStep() {
+                if (currentTourStep >= activeSteps.length) return;
+                var step = activeSteps[currentTourStep];
+                var targetEl = document.querySelector(step.selector) || (step.fallbackSelector ? document.querySelector(step.fallbackSelector) : null);
+                if (targetEl) applyTourSpotlight(targetEl);
+            }
+
+            var tourTrackingTimer = null;
+
+            function renderTourStep() {
+                if (currentTourStep < 0 || currentTourStep >= activeSteps.length) {
+                    endTour();
+                    return;
+                }
+
+                if (tourTrackingTimer) {
+                    clearTimeout(tourTrackingTimer);
+                    tourTrackingTimer = null;
+                }
+
+                var step = activeSteps[currentTourStep];
+                if (typeof step.beforeStep === 'function') {
+                    step.beforeStep();
+                }
+
+                var targetEl = document.querySelector(step.selector) || (step.fallbackSelector ? document.querySelector(step.fallbackSelector) : null);
+                if (!targetEl) {
+                    if (currentTourStep < activeSteps.length - 1) {
+                        currentTourStep++;
+                        renderTourStep();
+                    } else {
+                        endTour();
+                    }
+                    return;
+                }
+
+                var rect = targetEl.getBoundingClientRect();
+                var isInView = (
+                    rect.top >= 60 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight - 60) &&
+                    rect.right <= window.innerWidth
+                );
+
+                if (!isInView) {
+                    targetEl.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+                }
+
+                // Apply initial spotlight and popover
+                applyTourSpotlight(targetEl, step);
+
+                // Multi-frame lock to guarantee 100% pixel alignment after layout calculations
+                [50, 150, 300].forEach(function(delay) {
+                    setTimeout(function() {
+                        var curEl = document.querySelector(step.selector) || (step.fallbackSelector ? document.querySelector(step.fallbackSelector) : null);
+                        if (curEl) applyTourSpotlight(curEl);
+                    }, delay);
+                });
+            }
+
+            function prevTourStep() {
+                if (currentTourStep > 0) {
+                    currentTourStep--;
+                    renderTourStep();
+                }
+            }
+
+            function nextTourStep() {
+                if (currentTourStep < activeSteps.length - 1) {
+                    currentTourStep++;
+                    renderTourStep();
+                } else {
+                    endTour();
+                }
+            }
+
+            function endTour() {
+                document.removeEventListener('keydown', onTourKeyDown);
+                window.removeEventListener('resize', repositionCurrentStep);
+
+                var ring = document.getElementById('tourSpotlightRing');
+                if (ring) ring.style.display = 'none';
+
+                var tooltip = document.getElementById('tourTooltipPopover');
+                if (tooltip) tooltip.style.display = 'none';
+            }
+
+            function esc(s) {
+                if (!s) return '';
+                return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+
+            // Auto-trigger welcome tour on redirection check
+            (function() {
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('startTour') === 'true') {
+                    var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+                    setTimeout(function() {
+                        startWelcomeTour();
+                    }, 400);
+                }
+            })();
+
+            // Prevent accidental form submission when pressing Enter inside standard text inputs
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    var target = e.target;
+                    if (target && target.tagName === 'INPUT' && (target.type === 'text' || target.type === 'number' || target.type === 'search' || target.type === 'password' || target.type === 'email')) {
+                        if (target.id === 'overrideDaysInput' || target.id === 'overrideRemarksInput') {
+                            e.preventDefault();
+                            var saveBtn = document.getElementById('btnOverrideSave');
+                            if (saveBtn) saveBtn.click();
+                        } else if (target.id === 'search' && typeof onSearchInput === 'function') {
+                            e.preventDefault();
+                            onSearchInput();
+                        }
+                    }
+                }
+            });
+        </script>
+    </form>
+</body>
+</html>
