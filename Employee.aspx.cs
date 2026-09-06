@@ -789,6 +789,24 @@ namespace AttendanceApp
                     DBHelper.ExecuteNonQuery(DBHelper.GetAttendanceDBConnection(), updateQuery, pUpdate);
                     SyncIndividualLeaveCredits(DBHelper.GetAttendanceDBConnection(), oldMasterId, leave, prevLeave);
 
+                    // Sync EmployeeEngagements.EmployeeId for the current contract period
+                    try
+                    {
+                        string syncEngSql = @"
+                            UPDATE EmployeeEngagements 
+                            SET EmployeeId = :NewId 
+                            WHERE EmpID = :MasterId 
+                              AND ContractPeriodId = (
+                                  SELECT cp_ee.ContractPeriodId 
+                                  FROM EmployeeEngagements cp_ee 
+                                  WHERE cp_ee.Id = (SELECT e_sub.CurrentEngagementId FROM Employees e_sub WHERE e_sub.MasterId = :MasterId)
+                              )";
+                        DBHelper.ExecuteNonQuery(DBHelper.GetAttendanceDBConnection(), syncEngSql,
+                            new OracleParameter("NewId", id),
+                            new OracleParameter("MasterId", oldMasterId));
+                    }
+                    catch { }
+
                     // Log edit
                     string postState = ActionLogger.CaptureEmployeeState(targetMasterId);
                     ActionLogger.LogAction(actionType, targetMasterId, description, preState, postState);

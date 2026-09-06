@@ -395,9 +395,11 @@ namespace AttendanceApp
                                 ELSE e.PrevLeaveBalance 
                            END AS LeaveBalance
                     FROM Employees e
-                    JOIN EmployeeEngagements ee ON e.MasterId = ee.EmpID                     WHERE e.MasterId NOT LIKE 'GLOBAL%' AND e.Status <> 'System'
-                       AND e.Status IN ('Active', 'Upgraded', 'Downgraded', 'ContractEnded', 'Resigned', 'Transferred')
-                       AND ee.ContractPeriodId = :SelectedCpId";
+                    JOIN EmployeeEngagements ee ON e.MasterId = ee.EmpID
+                         AND ee.ContractPeriodId = :SelectedCpId
+                         AND ee.Id = (SELECT MAX(ee_sub.Id) FROM EmployeeEngagements ee_sub WHERE ee_sub.EmpID = e.MasterId AND ee_sub.ContractPeriodId = :SelectedCpId)
+                    WHERE e.MasterId NOT LIKE 'GLOBAL%' AND e.Status <> 'System'
+                       AND e.Status IN ('Active', 'Upgraded', 'Downgraded', 'ContractEnded', 'Resigned', 'Transferred')";
                 empParams.Add(new OracleParameter("SelectedCpId", selectedCpId.Value));
             }
             else
@@ -518,8 +520,8 @@ namespace AttendanceApp
                 SELECT ee.EmpID, ee.StartDate, ee.EndDate, ee.ContractPeriodId, cp.EndDate AS CpEndDate
                 FROM EmployeeEngagements ee
                 JOIN ContractPeriods cp ON ee.ContractPeriodId = cp.Id
-                WHERE (ee.StartDate <= :LastDay AND (ee.EndDate IS NULL OR ee.EndDate >= :FirstDay))
-                ORDER BY ee.StartDate DESC";
+                WHERE (ee.StartDate <= :LastDay AND (ee.EndDate IS NULL OR ee.EndDate >= :FirstDay))";
+                
             List<OracleParameter> engParams = new List<OracleParameter> {
                 new OracleParameter("LastDay", lastDay),
                 new OracleParameter("FirstDay", firstDay)
@@ -529,7 +531,9 @@ namespace AttendanceApp
                 engQuery += " AND ee.ContractPeriodId = :SelectedCpId";
                 engParams.Add(new OracleParameter("SelectedCpId", selectedCpId.Value));
             }
-            
+            engQuery += " ORDER BY ee.StartDate DESC";
+
+
             DataTable dtEng = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), engQuery, engParams.ToArray());
 
             Dictionary<string, List<EngagementRange>> engDict = new Dictionary<string, List<EngagementRange>>();
@@ -1404,9 +1408,10 @@ namespace AttendanceApp
                                END AS LeaveBalance
                         FROM Employees e
                         JOIN EmployeeEngagements ee ON e.MasterId = ee.EmpID
+                             AND ee.ContractPeriodId = :SelectedCpId
+                             AND ee.Id = (SELECT MAX(ee_sub.Id) FROM EmployeeEngagements ee_sub WHERE ee_sub.EmpID = e.MasterId AND ee_sub.ContractPeriodId = :SelectedCpId)
                         WHERE e.MasterId NOT LIKE 'GLOBAL%' AND e.Status <> 'System'
-                           AND e.Status IN ('Active', 'Upgraded', 'Downgraded', 'ContractEnded', 'Resigned', 'Transferred')
-                           AND ee.ContractPeriodId = :SelectedCpId";
+                           AND e.Status IN ('Active', 'Upgraded', 'Downgraded', 'ContractEnded', 'Resigned', 'Transferred')";
                     empParams.Add(new OracleParameter("SelectedCpId", selectedCpId.Value));
                 }
                 else

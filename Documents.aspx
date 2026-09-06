@@ -1,11 +1,12 @@
 <%@ Page Title="Documents" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true"
-    CodeBehind="Documents.aspx.cs" Inherits="AttendanceApp.Documents" %>
+    CodeBehind="Documents.aspx.cs" Inherits="AttendanceApp.Documents" ResponseEncoding="utf-8" ContentType="text/html; charset=utf-8" %>
 
     <asp:Content ID="Content1" ContentPlaceHolderID="TitleContent" runat="server">
         Documents & Certificates
     </asp:Content>
 
     <asp:Content ID="Content2" ContentPlaceHolderID="HeadContent" runat="server">
+        <meta charset="utf-8" />
         <script src="Static/js/xlsx.full.min.js?v=1.2.0"></script>
         <style>
             .control-panel-card {
@@ -154,6 +155,27 @@
                 right: 0;
             }
 
+            /* Wages Alternate Service Charge Drawer */
+            .wages-sidebar-drawer {
+                position: fixed;
+                top: 0;
+                right: -480px;
+                width: 440px;
+                max-width: 95vw;
+                height: 100vh;
+                background-color: #ffffff;
+                box-shadow: -10px 0 35px rgba(0, 0, 0, 0.15);
+                border-left: 1px solid #e2e8f0;
+                z-index: 100000;
+                transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                display: flex;
+                flex-direction: column;
+            }
+
+            .wages-sidebar-drawer.open {
+                right: 0;
+            }
+
             .drawer-header {
                 padding: 20px;
                 border-bottom: 1px solid #f1f5f9;
@@ -199,10 +221,20 @@
                 display: none;
             }
 
-            html.theme-dark .placeholders-drawer {
+            /* Alternate Service Charge Overlay - No blur and transparent so main bill remains completely clear */
+            #wagesAltDrawerOverlay,
+            html.theme-dark #wagesAltDrawerOverlay {
+                background-color: transparent !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+
+            html.theme-dark .placeholders-drawer,
+            html.theme-dark .wages-sidebar-drawer {
                 background-color: #161922 !important;
                 border-left-color: #2d3348 !important;
-                box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6) !important;
+                color: #e2e8f0 !important;
             }
 
             html.theme-dark .drawer-header {
@@ -268,7 +300,7 @@
                 box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
             }
 
-            /* ── Preview sheet styling (A4 representation) ── */
+            /* -- Preview sheet styling (A4 representation) -- */
             .preview-container {
                 background-color: #f1f5f9;
                 padding: 30px 10px;
@@ -587,7 +619,7 @@
                 font-weight: bold;
             }
 
-            /* ── Document Hub Grid Styling ── */
+            /* -- Document Hub Grid Styling -- */
             .hub-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -690,7 +722,7 @@
                 text-transform: uppercase;
             }
 
-            /* ── Print Media Styles ── */
+            /* -- Print Media Styles -- */
             @media print {
                 @page {
                     size: A4 portrait;
@@ -1648,6 +1680,14 @@
                         <label class="form-label-bold">Service Charge (%)</label>
                         <input type="number" id="wagesServiceChargeRate" class="form-control-custom" step="any"
                             value="3.85" oninput="updateWagesPreview()" />
+                        <div id="wagesAltScStatusNotice" style="display: none; margin-top: 6px; font-size: 0.78rem; color: #b45309; font-weight: 600; background: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px;">
+                            <i class="fas fa-check-circle text-success mr-1"></i> Alternate SC: <strong>Rs. <span id="wagesAltScAppliedAmount">0.00</span></strong>
+                            <span style="margin-left: 6px;">
+                                <a href="javascript:void(0)" onclick="toggleWagesAltDrawer()" style="color: #b45309; text-decoration: underline; font-weight: 700;">Edit</a>
+                                &nbsp;|&nbsp;
+                                <a href="javascript:void(0)" onclick="revertToStandardServiceCharge()" style="color: #dc2626; text-decoration: underline; font-weight: 700;">Revert</a>
+                            </span>
+                        </div>
                     </div>
                     <div>
                         <label class="form-label-bold">GST (%)</label>
@@ -1709,13 +1749,20 @@
 
 
 
-                <div class="btn-action-container mt-3">
+                <div class="btn-action-container mt-3" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
                     <button type="button" class="btn-custom btn-load" onclick="loadWagesData()"><i
                             class="fas fa-sync-alt"></i> Load Data</button>
                     <button type="button" class="btn-custom btn-print" onclick="window.print()"><i
                             class="fas fa-print"></i> Print</button>
                     <button type="button" class="btn-custom btn-excel" onclick="exportWagesToExcel()"><i
                             class="fas fa-file-excel"></i> Export Excel</button>
+                    <button type="button" class="btn-custom btn-print-hide" id="btnOpenWagesAltDrawer" onclick="toggleWagesAltDrawer()"
+                        style="background-color: #f59e0b; color: white; display: inline-flex; align-items: center; gap: 8px; margin-left: auto;">
+                        <i class="fas fa-calculator"></i> Alternate Service Charge
+                        <span id="wagesAltScBadge" style="display: none; background: #10b981; color: white; font-size: 0.72rem; padding: 2px 7px; border-radius: 10px; font-weight: bold; margin-left: 4px;">
+                            <i class="fas fa-check"></i> Applied
+                        </span>
+                    </button>
                 </div>
             </div>
 
@@ -1974,7 +2021,7 @@
                             <input type="number" id="satSectionSpacingInput" class="form-control-custom" value="25"
                                 min="0" max="100" step="1" oninput="previewSatLayout()" />
                             <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Space
-                                between each section (header→date, date→title, title→paragraph, between
+                                between each section (header->date, date->title, title->paragraph, between
                                 paragraphs).</small>
                         </div>
                         <div>
@@ -2075,7 +2122,7 @@
                             <input type="number" id="covSectionSpacingInput" class="form-control-custom" value="24"
                                 min="0" max="100" step="1" oninput="previewCovLayout()" />
                             <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Space
-                                between each section (phone→ref, ref→division, division→subject, subject→body).</small>
+                                between each section (phone->ref, ref->division, division->subject, subject->body).</small>
                         </div>
                         <div>
                             <label class="form-label-bold">Space Before Signatory (pt)</label>
@@ -2199,6 +2246,182 @@
                     </div>
                 </div>
 
+                </div>
+            </div>
+        </div>
+
+        <!-- Alternate Service Charge Drawer Overlay -->
+        <div id="wagesAltDrawerOverlay" class="drawer-overlay" onclick="closeWagesAltDrawer()"></div>
+
+        <!-- Right: Wages Alternate Service Charge Drawer -->
+        <div id="wagesAltServiceChargeDrawer" class="wages-sidebar-drawer btn-print-hide">
+            <div class="drawer-header" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e2e8f0; padding: 16px 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(245, 158, 11, 0.15); color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div>
+                        <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.96rem;">Alternate Service Charge</h6>
+                        <div style="font-size: 0.74rem; color: #64748b;">Calculate from tender/base daily rate</div>
+                    </div>
+                </div>
+                <button type="button" class="drawer-close-btn" onclick="closeWagesAltDrawer()">&times;</button>
+            </div>
+
+            <div class="drawer-content" style="padding: 18px 20px; overflow-y: auto;">
+                <!-- Info Alert -->
+                <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.79rem; color: #1e40af; line-height: 1.5;">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Enter the base/tender amount for each day. The subtotal and service charge will be calculated for the selected category employees based on their working days.
+                </div>
+
+                <!-- Main Input: Amount for each day -->
+                <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                    <label class="form-label-bold" style="color: #0f172a; font-size: 0.88rem; margin-bottom: 3px;">
+                        <i class="fas fa-coins text-warning mr-1"></i> Amount for Each Day (Rs. / day) <span class="text-danger">*</span>
+                    </label>
+                    <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 8px;">
+                        Tender/base daily rate used to compute subtotal &amp; service charge
+                    </div>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: bold; color: #64748b; font-size: 0.95rem;">Rs.</span>
+                        <input type="number" id="wagesAltDailyRate" class="form-control-custom" step="any" placeholder="e.g., 800"
+                            style="padding-left: 42px; font-size: 1.05rem; font-weight: 700; color: #0f172a; border-color: #3b82f6;"
+                            oninput="calculateAltServiceCharge()" />
+                    </div>
+                </div>
+
+                <!-- Configurable Parameters Section (editable service charge, epf, epf cap) -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="font-weight: 700; font-size: 0.8rem; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
+                            <i class="fas fa-sliders-h text-primary mr-1"></i> Configurable Rates &amp; EPF
+                        </div>
+                        <button type="button" class="btn btn-sm btn-link p-0" onclick="resetAltDrawerToMainDefaults()" style="font-size: 0.74rem; color: #4f46e5; text-decoration: none; font-weight: 600;">
+                            <i class="fas fa-undo mr-1"></i> Reset to Defaults
+                        </button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label class="form-label-bold" style="font-size: 0.76rem;">Service Charge (%)</label>
+                            <input type="number" id="wagesAltScRate" class="form-control-custom" step="any" value="3.85"
+                                oninput="this.dataset.userEdited='true'; calculateAltServiceCharge()" />
+                        </div>
+                        <div>
+                            <label class="form-label-bold" style="font-size: 0.76rem;">EPF Rate (%)</label>
+                            <input type="number" id="wagesAltEpfRate" class="form-control-custom" step="any" value="13"
+                                oninput="this.dataset.userEdited='true'; onAltEpfParamsChange()" />
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="form-label-bold" style="font-size: 0.76rem;">EPF Wage Limit (Rs)</label>
+                            <input type="number" id="wagesAltEpfLimit" class="form-control-custom" step="any" value="15000"
+                                oninput="this.dataset.userEdited='true'; onAltEpfParamsChange()" />
+                        </div>
+                        <div>
+                            <label class="form-label-bold" style="font-size: 0.76rem;">EPF Capped Amount (Rs)</label>
+                            <input type="number" id="wagesAltEpfCappedAmount" class="form-control-custom" step="any" value="1950"
+                                oninput="this.dataset.manualOverride='true'; calculateAltServiceCharge()" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Breakdown Results Card -->
+                <div id="wagesAltBreakdownCard" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="font-weight: 700; font-size: 0.8rem; color: #334155; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.04em;">
+                        <i class="fas fa-chart-pie text-info mr-1"></i> Calculation Breakdown
+                    </div>
+
+                    <div id="wagesAltNoDataNotice" style="display: block; text-align: center; color: #94a3b8; font-size: 0.82rem; padding: 16px 0;">
+                        <i class="fas fa-coins fa-2x mb-2 d-block" style="color: #cbd5e1;"></i>
+                        Enter an alternate daily rate to calculate service charge.
+                    </div>
+
+                    <div id="wagesAltDataContainer" style="display: none;">
+                        <div style="font-size: 0.8rem; line-height: 1.75;">
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding-bottom: 3px; margin-bottom: 3px;">
+                                <span style="color: #64748b;">Selected Category:</span>
+                                <span id="wagesAltCatName" style="font-weight: 600; color: #0f172a;">-</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding-bottom: 3px; margin-bottom: 3px;">
+                                <span style="color: #64748b;">People / Working Days:</span>
+                                <span style="font-weight: 600; color: #0f172a;"><span id="wagesAltPeopleCount">0</span> persons / <span id="wagesAltTotalDays">0</span> days</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding-bottom: 3px; margin-bottom: 3px;">
+                                <span style="color: #64748b;">Alternate Wages (<span id="wagesAltWagesFormula">0*0</span>):</span>
+                                <span id="wagesAltWagesTotal" style="font-weight: 600; color: #0f172a;">Rs. 0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding-bottom: 3px; margin-bottom: 3px;">
+                                <span style="color: #64748b;" id="wagesAltEpfCappedLabel">EPF Capped:</span>
+                                <span id="wagesAltEpfCappedTotal" style="font-weight: 600; color: #0f172a;">Rs. 0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding-bottom: 3px; margin-bottom: 3px;">
+                                <span style="color: #64748b;" id="wagesAltEpfActualLabel">EPF Actual:</span>
+                                <span id="wagesAltEpfActualTotal" style="font-weight: 600; color: #0f172a;">Rs. 0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; background: #f8fafc; padding: 7px 10px; border-radius: 6px; margin: 8px 0; font-weight: 700;">
+                                <span style="color: #334155;">Alternate Sub Total:</span>
+                                <span id="wagesAltSubTotal" style="color: #0f172a; font-size: 0.92rem;">Rs. 0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Generated Service Charge Highlight Box -->
+                        <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1.5px solid #6ee7b7; border-radius: 8px; padding: 12px 14px; margin-top: 10px; text-align: center;">
+                            <div style="font-size: 0.76rem; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px;">
+                                <i class="fas fa-check-circle mr-1"></i> Generated Alternate Service Charge
+                            </div>
+                            <div id="wagesAltGeneratedScAmount" style="font-size: 1.45rem; font-weight: 800; color: #065f46;">
+                                Rs. 0.00
+                            </div>
+                            <div id="wagesAltScRateFormula" style="font-size: 0.74rem; color: #047857; margin-top: 2px;">
+                                @ 3.85% of Alternate Sub Total
+                            </div>
+                        </div>
+
+                        <!-- Group Days Breakdown Collapsible -->
+                        <div style="margin-top: 12px;">
+                            <a href="javascript:void(0)" onclick="toggleAltGroupTable()" style="font-size: 0.76rem; font-weight: 600; color: #4f46e5; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                <span id="altGroupToggleIcon"><i class="fas fa-chevron-down"></i></span> View Group Details Table
+                            </a>
+                            <div id="altGroupTableContainer" style="display: none; margin-top: 8px; max-height: 180px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+                                <table style="width: 100%; font-size: 0.74rem; border-collapse: collapse;">
+                                    <thead style="background: #f1f5f9; font-weight: 700; position: sticky; top: 0;">
+                                        <tr>
+                                            <th style="padding: 5px; text-align: center; border-bottom: 1px solid #cbd5e1;">Days</th>
+                                            <th style="padding: 5px; text-align: center; border-bottom: 1px solid #cbd5e1;">People</th>
+                                            <th style="padding: 5px; text-align: right; border-bottom: 1px solid #cbd5e1;">Total Days</th>
+                                            <th style="padding: 5px; text-align: right; border-bottom: 1px solid #cbd5e1;">Pay/Person</th>
+                                            <th style="padding: 5px; text-align: center; border-bottom: 1px solid #cbd5e1;">EPF Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="altGroupTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuration & Actions -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 12px; font-weight: 700; color: #1e293b; font-size: 0.85rem;">
+                        <input type="checkbox" id="chkUseAltServiceCharge" style="width: 18px; height: 18px; cursor: pointer; accent-color: #10b981;"
+                            onchange="onToggleAltServiceCharge(this.checked)" />
+                        <span>Use Alternate Service Charge in Main Bill</span>
+                    </label>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button type="button" class="btn-custom" onclick="applyAltServiceChargeToMain()"
+                            style="background-color: #10b981; color: white; justify-content: center; width: 100%; font-size: 0.86rem; height: 38px;">
+                            <i class="fas fa-check mr-1"></i> Apply to Main Bill &amp; Close
+                        </button>
+                        <button type="button" class="btn-custom" onclick="revertToStandardServiceCharge()"
+                            style="background-color: #64748b; color: white; justify-content: center; width: 100%; font-size: 0.83rem; height: 34px;">
+                            <i class="fas fa-undo mr-1"></i> Revert to Standard Calculation
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2383,10 +2606,10 @@
                     return { val: "All", text: "Contract Staff", cleanName: "Contract Staff" };
                 }
 
-                // Extract tier/category name if format is "MainCategory › Tier (#Role)" or "Skilled"
+                // Extract tier/category name if format is "MainCategory > Tier (#Role)" or "Skilled"
                 let cleanName = text;
-                if (cleanName.includes(" › ")) {
-                    const parts = cleanName.split(" › ");
+                if (cleanName.includes(" > ")) {
+                    const parts = cleanName.split(" > ");
                     cleanName = parts[parts.length - 1].trim();
                 }
                 cleanName = cleanName.replace(/\s*\(\s*#.*\)/, "").trim();
@@ -2788,6 +3011,7 @@
 
                 // Close drawer when switching workspace
                 closePlaceholdersDrawer();
+                closeWagesAltDrawer();
 
                 if (docType === 'attendance-cert') {
                     document.getElementById('attendanceCertWorkspace').style.display = 'block';
@@ -2855,6 +3079,7 @@
 
                 // Close drawer when going back
                 closePlaceholdersDrawer();
+                closeWagesAltDrawer();
             }
 
             function switchTemplateTab(evt, tabId) {
@@ -2982,11 +3207,19 @@
                     }
 
                     let serviceCharge = subTotal * (serviceChargeRate / 100);
+                    let scFormulaText = `Service Charge  @${serviceChargeRate.toFixed(2)}% `;
+                    if (window.wagesAltScEnabled && window.wagesAltScData && window.wagesAltScData.serviceCharge > 0) {
+                        serviceCharge = window.wagesAltScData.serviceCharge;
+                        scFormulaText = `Service Charge  @${window.wagesAltScData.scRate.toFixed(2)}% `;
+                    }
+
                     if (document.activeElement !== document.getElementById("wagesAmountServiceCharge")) {
                         document.getElementById("wagesAmountServiceCharge").textContent = serviceCharge.toFixed(2);
                     } else {
                         serviceCharge = parseFloat(document.getElementById("wagesAmountServiceCharge").textContent.replace(/,/g, '')) || 0;
                     }
+                    const scFormulaEl = document.getElementById("wagesFormulaServiceCharge");
+                    if (scFormulaEl) scFormulaEl.textContent = scFormulaText;
 
                     let gst = subTotal * (gstRate / 100);
                     if (document.activeElement !== document.getElementById("wagesAmountGst")) {
@@ -3005,7 +3238,7 @@
                 }
             });
 
-            // ── Covering Letter Scripts ──
+            // -- Covering Letter Scripts --
             let divisions = [];
 
             function getOrdinalSuffix(day) {
@@ -3427,7 +3660,7 @@ p { margin: 0; padding: 0; }
                 showToast("Covering Letter downloaded as DOC.", "success");
             }
 
-            // ── Satisfactory Certificate Scripts ──
+            // -- Satisfactory Certificate Scripts --
             let satContractsList = [];
             let satEmployeesData = [];
 
@@ -3950,8 +4183,8 @@ p { margin: 0; padding: 0; }
             function formatCategoryText(rawText) {
                 if (!rawText || rawText === "All Categories" || rawText === "All") return "All Categories";
                 let text = rawText;
-                if (text.includes(" › ")) {
-                    const parts = text.split(" › ");
+                if (text.includes(" > ")) {
+                    const parts = text.split(" > ");
                     text = parts[parts.length - 1].trim();
                 }
                 return text.replace(/\s*\(\s*#.*\)/, "").trim();
@@ -4106,7 +4339,7 @@ p { margin: 0; padding: 0; }
                 loadData();
             }
 
-            // ── Wages Calculation Javascript Functions ──
+            // -- Wages Calculation Javascript Functions --
             let wagesEmployeesData = [];
             let wagesMetadata = null;
             let wagesContractsList = [];
@@ -4239,6 +4472,15 @@ p { margin: 0; padding: 0; }
                 document.getElementById("wagesTotalPeople").textContent = "0";
                 document.getElementById("wagesTotalDays").textContent = "0";
                 document.getElementById("wagesPreviewArea").style.display = "none";
+                window.wagesAltScEnabled = false;
+                window.wagesAltScData = null;
+                const badge = document.getElementById("wagesAltScBadge");
+                if (badge) badge.style.display = "none";
+                const notice = document.getElementById("wagesAltScStatusNotice");
+                if (notice) notice.style.display = "none";
+                const chk = document.getElementById("chkUseAltServiceCharge");
+                if (chk) chk.checked = false;
+                calculateAltServiceCharge();
             }
 
             function loadWagesData() {
@@ -4316,6 +4558,7 @@ p { margin: 0; padding: 0; }
                         }
 
                         updateWagesPreview();
+                        syncAltWagesDrawerWithLoadedData();
                         loader.style.display = "none";
                         previewArea.style.display = "block";
                         showToast(`Loaded wages calculation data successfully!`, "success");
@@ -4397,7 +4640,30 @@ p { margin: 0; padding: 0; }
                 const wagesTotal = totalWorkingDays * dailyRate;
                 const epfCappedTotal = epfCappedCount * epfMaxAmount;
                 const subTotal = wagesTotal + epfCappedTotal + epfActualSum;
-                const serviceCharge = subTotal * (serviceChargeRate / 100);
+
+                // Determine Service Charge: Standard or Alternate
+                const standardServiceCharge = subTotal * (serviceChargeRate / 100);
+                let serviceCharge = standardServiceCharge;
+                let scFormulaText = `Service Charge  @${serviceChargeRate.toFixed(2)}% `;
+
+                const badge = document.getElementById("wagesAltScBadge");
+                const notice = document.getElementById("wagesAltScStatusNotice");
+                const appliedAmountEl = document.getElementById("wagesAltScAppliedAmount");
+                const chk = document.getElementById("chkUseAltServiceCharge");
+
+                if (window.wagesAltScEnabled && window.wagesAltScData && window.wagesAltScData.serviceCharge > 0) {
+                    serviceCharge = window.wagesAltScData.serviceCharge;
+                    scFormulaText = `Service Charge  @${window.wagesAltScData.scRate.toFixed(2)}% `;
+                    if (badge) badge.style.display = "inline-block";
+                    if (notice) notice.style.display = "block";
+                    if (appliedAmountEl) appliedAmountEl.textContent = serviceCharge.toFixed(2);
+                    if (chk) chk.checked = true;
+                } else {
+                    if (badge) badge.style.display = "none";
+                    if (notice) notice.style.display = "none";
+                    if (chk) chk.checked = false;
+                }
+
                 const gst = subTotal * (gstRate / 100);
                 const grandTotal = subTotal + serviceCharge + gst;
 
@@ -4413,7 +4679,7 @@ p { margin: 0; padding: 0; }
 
                 document.getElementById("wagesAmountSubTotal").textContent = subTotal.toFixed(2);
 
-                document.getElementById("wagesFormulaServiceCharge").textContent = `Service Charge  @${serviceChargeRate.toFixed(2)}% `;
+                document.getElementById("wagesFormulaServiceCharge").textContent = scFormulaText;
                 document.getElementById("wagesAmountServiceCharge").textContent = serviceCharge.toFixed(2);
 
                 document.getElementById("wagesFormulaGst").textContent = `GST @${gstRate.toFixed(2)}%`;
@@ -4491,6 +4757,289 @@ p { margin: 0; padding: 0; }
                 document.getElementById("wagesHeaderPeriod").innerHTML = line3Html;
                 document.getElementById("wagesHeaderVendor").innerHTML = line4Html;
                 document.getElementById("wagesHeaderPayment").innerHTML = line5Html;
+            }
+
+            // -- Alternate Service Charge Calculations & Drawer Controller --
+            window.wagesAltScEnabled = false;
+            window.wagesAltScData = null;
+
+            function toggleWagesAltDrawer() {
+                const drawer = document.getElementById("wagesAltServiceChargeDrawer");
+                const overlay = document.getElementById("wagesAltDrawerOverlay");
+                if (drawer && overlay) {
+                    if (drawer.classList.contains("open")) {
+                        closeWagesAltDrawer();
+                    } else {
+                        closePlaceholdersDrawer();
+                        syncAltWagesDrawerWithLoadedData();
+                        drawer.classList.add("open");
+                        overlay.style.display = "block";
+                        const rateInput = document.getElementById("wagesAltDailyRate");
+                        if (rateInput && !rateInput.value) {
+                            setTimeout(() => rateInput.focus(), 250);
+                        }
+                    }
+                }
+            }
+
+            function closeWagesAltDrawer() {
+                const drawer = document.getElementById("wagesAltServiceChargeDrawer");
+                const overlay = document.getElementById("wagesAltDrawerOverlay");
+                if (drawer && overlay) {
+                    drawer.classList.remove("open");
+                    overlay.style.display = "none";
+                }
+            }
+
+            function syncAltWagesDrawerWithLoadedData() {
+                const scRateInput = document.getElementById("wagesServiceChargeRate");
+                const epfRateInput = document.getElementById("wagesEpfRate");
+                const epfLimitInput = document.getElementById("wagesEpfLimit");
+                const epfCappedInput = document.getElementById("wagesEpfCappedAmount");
+
+                const altScRate = document.getElementById("wagesAltScRate");
+                const altEpfRate = document.getElementById("wagesAltEpfRate");
+                const altEpfLimit = document.getElementById("wagesAltEpfLimit");
+                const altEpfCapped = document.getElementById("wagesAltEpfCappedAmount");
+
+                if (altScRate && (!altScRate.value || altScRate.dataset.userEdited !== "true")) {
+                    altScRate.value = scRateInput && scRateInput.value ? scRateInput.value : "3.85";
+                }
+                if (altEpfRate && (!altEpfRate.value || altEpfRate.dataset.userEdited !== "true")) {
+                    altEpfRate.value = epfRateInput && epfRateInput.value ? epfRateInput.value : "13";
+                }
+                if (altEpfLimit && (!altEpfLimit.value || altEpfLimit.dataset.userEdited !== "true")) {
+                    altEpfLimit.value = epfLimitInput && epfLimitInput.value ? epfLimitInput.value : "15000";
+                }
+                if (altEpfCapped && (!altEpfCapped.value || altEpfCapped.dataset.manualOverride !== "true")) {
+                    altEpfCapped.value = epfCappedInput && epfCappedInput.value ? epfCappedInput.value : "1950";
+                }
+
+                calculateAltServiceCharge();
+            }
+
+            function resetAltDrawerToMainDefaults() {
+                const scRateInput = document.getElementById("wagesServiceChargeRate");
+                const epfRateInput = document.getElementById("wagesEpfRate");
+                const epfLimitInput = document.getElementById("wagesEpfLimit");
+                const epfCappedInput = document.getElementById("wagesEpfCappedAmount");
+
+                const altScRate = document.getElementById("wagesAltScRate");
+                const altEpfRate = document.getElementById("wagesAltEpfRate");
+                const altEpfLimit = document.getElementById("wagesAltEpfLimit");
+                const altEpfCapped = document.getElementById("wagesAltEpfCappedAmount");
+
+                if (altScRate) {
+                    altScRate.value = scRateInput && scRateInput.value ? scRateInput.value : "3.85";
+                    delete altScRate.dataset.userEdited;
+                }
+                if (altEpfRate) {
+                    altEpfRate.value = epfRateInput && epfRateInput.value ? epfRateInput.value : "13";
+                    delete altEpfRate.dataset.userEdited;
+                }
+                if (altEpfLimit) {
+                    altEpfLimit.value = epfLimitInput && epfLimitInput.value ? epfLimitInput.value : "15000";
+                    delete altEpfLimit.dataset.userEdited;
+                }
+                if (altEpfCapped) {
+                    altEpfCapped.value = epfCappedInput && epfCappedInput.value ? epfCappedInput.value : "1950";
+                    delete altEpfCapped.dataset.manualOverride;
+                }
+                calculateAltServiceCharge();
+                if (typeof showToast === "function") {
+                    showToast("Parameters reset to main defaults.", "info");
+                }
+            }
+
+            function onAltEpfParamsChange() {
+                const limit = parseFloat(document.getElementById("wagesAltEpfLimit").value) || 0;
+                const rate = parseFloat(document.getElementById("wagesAltEpfRate").value) || 0;
+                const cappedInput = document.getElementById("wagesAltEpfCappedAmount");
+                if (cappedInput && cappedInput.dataset.manualOverride !== "true") {
+                    cappedInput.value = Math.round(limit * (rate / 100));
+                }
+                calculateAltServiceCharge();
+            }
+
+            function calculateAltServiceCharge() {
+                const noDataEl = document.getElementById("wagesAltNoDataNotice");
+                const dataContainerEl = document.getElementById("wagesAltDataContainer");
+
+                if (!wagesEmployeesData || wagesEmployeesData.length === 0) {
+                    if (noDataEl) {
+                        noDataEl.style.display = "block";
+                        noDataEl.innerHTML = '<i class="fas fa-exclamation-circle fa-2x mb-2 d-block" style="color: #cbd5e1;"></i>Please load wages data first using the "Load Data" button.';
+                    }
+                    if (dataContainerEl) dataContainerEl.style.display = "none";
+                    window.wagesAltScData = null;
+                    return;
+                }
+
+                const altDailyRate = parseFloat(document.getElementById("wagesAltDailyRate").value) || 0;
+                const altScRate = parseFloat(document.getElementById("wagesAltScRate").value) || 0;
+                const altEpfRate = parseFloat(document.getElementById("wagesAltEpfRate").value) || 0;
+                const altEpfLimit = parseFloat(document.getElementById("wagesAltEpfLimit").value) || 0;
+                const altEpfCappedAmount = parseFloat(document.getElementById("wagesAltEpfCappedAmount").value) || 0;
+
+                if (altDailyRate <= 0) {
+                    if (noDataEl) {
+                        noDataEl.style.display = "block";
+                        noDataEl.innerHTML = '<i class="fas fa-coins fa-2x mb-2 d-block" style="color: #f59e0b;"></i>Enter amount for each day above to calculate alternate service charge.';
+                    }
+                    if (dataContainerEl) dataContainerEl.style.display = "none";
+                    window.wagesAltScData = null;
+                    return;
+                }
+
+                // Employees grouped by FinalDays
+                const groups = {};
+                wagesEmployeesData.forEach(emp => {
+                    const days = emp.FinalDays;
+                    groups[days] = (groups[days] || 0) + 1;
+                });
+
+                const sortedDays = Object.keys(groups).map(Number).sort((a, b) => b - a);
+
+                let totalPeople = 0;
+                let totalWorkingDays = 0;
+                let epfCappedCount = 0;
+                let epfActualCount = 0;
+                let epfActualSum = 0;
+                let tableRowsHtml = "";
+
+                sortedDays.forEach(days => {
+                    const peopleCount = groups[days];
+                    const paymentPerPerson = days * altDailyRate;
+                    const rowTotalDays = peopleCount * days;
+
+                    totalPeople += peopleCount;
+                    totalWorkingDays += rowTotalDays;
+
+                    let epfType = "";
+                    if (paymentPerPerson >= altEpfLimit) {
+                        epfCappedCount += peopleCount;
+                        epfType = `<span class="badge badge-info" style="font-size:0.68rem; background:#e0f2fe; color:#0369a1; padding:2px 5px; border-radius:4px;">Capped (${altEpfCappedAmount})</span>`;
+                    } else {
+                        epfActualCount += peopleCount;
+                        const rowActual = (paymentPerPerson * (altEpfRate / 100)) * peopleCount;
+                        epfActualSum += rowActual;
+                        epfType = `<span class="badge badge-secondary" style="font-size:0.68rem; background:#f1f5f9; color:#475569; padding:2px 5px; border-radius:4px;">Actual (${(paymentPerPerson * (altEpfRate / 100)).toFixed(2)})</span>`;
+                    }
+
+                    tableRowsHtml += `
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 4px; text-align: center;">${days}</td>
+                            <td style="padding: 4px; text-align: center;">${peopleCount}</td>
+                            <td style="padding: 4px; text-align: right;">${rowTotalDays}</td>
+                            <td style="padding: 4px; text-align: right;">${paymentPerPerson.toFixed(2)}</td>
+                            <td style="padding: 4px; text-align: center;">${epfType}</td>
+                        </tr>
+                    `;
+                });
+
+                const altWagesTotal = totalWorkingDays * altDailyRate;
+                const altEpfCappedTotal = epfCappedCount * altEpfCappedAmount;
+                const altSubTotal = altWagesTotal + altEpfCappedTotal + epfActualSum;
+                const altServiceCharge = altSubTotal * (altScRate / 100);
+
+                const catSelect = document.getElementById("wagesCategory");
+                const catName = catSelect && catSelect.options && catSelect.selectedIndex >= 0 ? catSelect.options[catSelect.selectedIndex].text : "Selected Category";
+
+                // Save calculation result object
+                window.wagesAltScData = {
+                    dailyRate: altDailyRate,
+                    scRate: altScRate,
+                    epfRate: altEpfRate,
+                    epfLimit: altEpfLimit,
+                    epfCappedAmount: altEpfCappedAmount,
+                    totalPeople: totalPeople,
+                    totalWorkingDays: totalWorkingDays,
+                    wagesTotal: altWagesTotal,
+                    epfCappedCount: epfCappedCount,
+                    epfCappedTotal: altEpfCappedTotal,
+                    epfActualCount: epfActualCount,
+                    epfActualSum: epfActualSum,
+                    subTotal: altSubTotal,
+                    serviceCharge: altServiceCharge
+                };
+
+                // Update UI elements in drawer
+                if (noDataEl) noDataEl.style.display = "none";
+                if (dataContainerEl) dataContainerEl.style.display = "block";
+
+                document.getElementById("wagesAltCatName").textContent = catName;
+                document.getElementById("wagesAltPeopleCount").textContent = totalPeople;
+                document.getElementById("wagesAltTotalDays").textContent = totalWorkingDays;
+                document.getElementById("wagesAltWagesFormula").textContent = `${altDailyRate}*${totalWorkingDays}`;
+                document.getElementById("wagesAltWagesTotal").textContent = "Rs. " + altWagesTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById("wagesAltEpfCappedLabel").textContent = `EPF @${altEpfRate}% (${epfCappedCount} persons capped):`;
+                document.getElementById("wagesAltEpfCappedTotal").textContent = "Rs. " + altEpfCappedTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById("wagesAltEpfActualLabel").textContent = `EPF @${altEpfRate}% (${epfActualCount} persons actual):`;
+                document.getElementById("wagesAltEpfActualTotal").textContent = "Rs. " + epfActualSum.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById("wagesAltSubTotal").textContent = "Rs. " + altSubTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                document.getElementById("wagesAltGeneratedScAmount").textContent = "Rs. " + altServiceCharge.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById("wagesAltScRateFormula").textContent = `@ ${altScRate.toFixed(2)}% of Alternate Sub Total (Rs. ${altSubTotal.toFixed(2)})`;
+
+                const tableBody = document.getElementById("altGroupTableBody");
+                if (tableBody) tableBody.innerHTML = tableRowsHtml;
+
+                // If currently enabled on the main bill, update the main bill in real time
+                if (window.wagesAltScEnabled) {
+                    updateWagesPreview();
+                }
+            }
+
+            function applyAltServiceChargeToMain() {
+                if (!window.wagesAltScData || window.wagesAltScData.dailyRate <= 0) {
+                    showToast("Please enter a valid amount for each day first.", "warning");
+                    return;
+                }
+                window.wagesAltScEnabled = true;
+                const chk = document.getElementById("chkUseAltServiceCharge");
+                if (chk) chk.checked = true;
+                updateWagesPreview();
+                showToast(`Applied alternate service charge (Rs. ${window.wagesAltScData.serviceCharge.toFixed(2)}) to main bill!`, "success");
+                closeWagesAltDrawer();
+            }
+
+            function revertToStandardServiceCharge() {
+                window.wagesAltScEnabled = false;
+                const chk = document.getElementById("chkUseAltServiceCharge");
+                if (chk) chk.checked = false;
+                updateWagesPreview();
+                if (typeof showToast === "function") {
+                    showToast("Reverted to standard service charge calculation.", "info");
+                }
+            }
+
+            function onToggleAltServiceCharge(enabled) {
+                if (enabled && (!window.wagesAltScData || window.wagesAltScData.dailyRate <= 0)) {
+                    showToast("Please enter an alternate daily rate first.", "warning");
+                    document.getElementById("chkUseAltServiceCharge").checked = false;
+                    return;
+                }
+                window.wagesAltScEnabled = enabled;
+                updateWagesPreview();
+                if (enabled) {
+                    showToast("Alternate service charge enabled for main bill.", "success");
+                } else {
+                    showToast("Alternate service charge disabled. Using standard calculation.", "info");
+                }
+            }
+
+            function toggleAltGroupTable() {
+                const container = document.getElementById("altGroupTableContainer");
+                const icon = document.getElementById("altGroupToggleIcon");
+                if (container) {
+                    if (container.style.display === "none") {
+                        container.style.display = "block";
+                        if (icon) icon.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                    } else {
+                        container.style.display = "none";
+                        if (icon) icon.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                    }
+                }
             }
 
             function exportWagesToExcel() {
@@ -4675,7 +5224,7 @@ p { margin: 0; padding: 0; }
                 const monthText = document.getElementById("wagesMonth").options[document.getElementById("wagesMonth").selectedIndex].text;
                 XLSX.utils.book_append_sheet(wb, ws, `${monthText} Salarywges`);
 
-                // ── Build Break UP sheet ──
+                // -- Build Break UP sheet --
                 const breakupData = [];
                 const bData = window.wagesBreakupData || {
                     title: "VALUE AS PER GOVT VALUE",

@@ -1047,7 +1047,6 @@
                     <asp:BoundField DataField="Category" HeaderText="Category" />
                     <asp:BoundField DataField="JoinDate" HeaderText="Join Date" DataFormatString="{0:dd-MM-yyyy}" />
                     <asp:BoundField DataField="LeaveBalance" HeaderText="Leave" />
-                    <asp:BoundField DataField="PrevLeaveBalance" HeaderText="Prev Leave" />
                     <asp:TemplateField HeaderText="Status">
                         <ItemTemplate>
                             <asp:DropDownList ID="ddlStatus" runat="server"

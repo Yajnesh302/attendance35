@@ -2578,8 +2578,8 @@ namespace AttendanceApp
                                     cmdEmp.ExecuteNonQuery();
                                 }
 
-                                // Update active/open EmployeeEngagements
-                                string updateEngSql = "UPDATE EmployeeEngagements SET EmployeeId = :NewId WHERE EmpID = :MasterId AND ContractPeriodId = :PeriodId AND EndDate IS NULL";
+                                // Update all EmployeeEngagements for this employee in this contract period
+                                string updateEngSql = "UPDATE EmployeeEngagements SET EmployeeId = :NewId WHERE EmpID = :MasterId AND ContractPeriodId = :PeriodId";
                                 using (OracleCommand cmdEng = new OracleCommand(updateEngSql, conn))
                                 {
                                     cmdEng.Transaction = trans;

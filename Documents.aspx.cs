@@ -212,9 +212,10 @@ namespace AttendanceApp
                                END AS LeaveBalance
                         FROM Employees e
                         JOIN EmployeeEngagements ee ON e.MasterId = ee.EmpID
+                             AND ee.ContractPeriodId = :SelectedCpId
+                             AND ee.Id = (SELECT MAX(ee_sub.Id) FROM EmployeeEngagements ee_sub WHERE ee_sub.EmpID = e.MasterId AND ee_sub.ContractPeriodId = :SelectedCpId)
                         WHERE e.MasterId NOT LIKE 'GLOBAL%' AND e.Status <> 'System'
-                          AND e.Status IN ('Active', 'Upgraded', 'Downgraded', 'ContractEnded', 'Resigned', 'Transferred')
-                          AND ee.ContractPeriodId = :SelectedCpId";
+                          AND e.Status IN ('Active', 'Upgraded', 'Downgraded', 'ContractEnded', 'Resigned', 'Transferred')";
                     empParams.Add(new OracleParameter("SelectedCpId", selectedCpId.Value));
                 }
                 else
