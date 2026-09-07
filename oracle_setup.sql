@@ -35,6 +35,7 @@ DROP TRIGGER TRG_ContractExtensions;
 DROP TRIGGER TRG_AttendanceAuditLog;
 
 -- Drop tables (in reverse dependency order)
+DROP TABLE WagesAlternateServiceCharge CASCADE CONSTRAINTS;
 DROP TABLE CertificateTemplates    CASCADE CONSTRAINTS;
 DROP TABLE EmployeeLeaveCredits    CASCADE CONSTRAINTS;
 DROP TABLE NoticeReads             CASCADE CONSTRAINTS;
@@ -580,6 +581,28 @@ CREATE TABLE CalculationOverrides (
     FOREIGN KEY (EngagementId)     REFERENCES EmployeeEngagements(Id),
     FOREIGN KEY (ContractPeriodId) REFERENCES ContractPeriods(Id),
     FOREIGN KEY (TierId)           REFERENCES Tiers(Id) ON DELETE CASCADE
+);
+
+-- -----------------------------------------------------------------------------
+-- 3.13b WagesAlternateServiceCharge (Alternate service charge values applied in Wages Generator)
+-- -----------------------------------------------------------------------------
+CREATE TABLE WagesAlternateServiceCharge (
+    Year             NUMBER(4)     NOT NULL,
+    Month            NUMBER(2)     NOT NULL,
+    TierId           NUMBER        NOT NULL,
+    ContractPeriodId NUMBER        NOT NULL,
+    DailyRate        NUMBER(10, 2) NOT NULL,
+    ScRate           NUMBER(5, 2)  DEFAULT 3.85,
+    EpfRate          NUMBER(5, 2)  DEFAULT 13.0,
+    EpfLimit         NUMBER(10, 2) DEFAULT 15000.0,
+    EpfCappedAmount  NUMBER(10, 2) DEFAULT 1950.0,
+    ServiceCharge    NUMBER(12, 2) DEFAULT 0,
+    IsApplied        NUMBER(1)     DEFAULT 1 NOT NULL CHECK (IsApplied IN (0, 1)),
+    UpdatedBy        VARCHAR2(50),
+    UpdatedAt        TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
+    PRIMARY KEY (Year, Month, TierId, ContractPeriodId),
+    FOREIGN KEY (TierId) REFERENCES Tiers(Id) ON DELETE CASCADE,
+    FOREIGN KEY (ContractPeriodId) REFERENCES ContractPeriods(Id) ON DELETE CASCADE
 );
 
 -- -----------------------------------------------------------------------------

@@ -1094,10 +1094,6 @@
                             <div class="sidebar-logo-card">
                                 <img src="Static/Images/newlrdelogo.png" alt="LRDE Logo" style="max-width: 110px; height: auto; display: block; margin: 0 auto;" />
                             </div>
-                            <div class="sidebar-brand-text-wrap">
-                                <div class="sidebar-brand-title">ARS</div>
-                                <div class="sidebar-brand-subtitle">Attendance Recording System<br />(Skilled, Semi-Skilled)</div>
-                            </div>
                         </div>
                         <div style="border-top: 1px solid rgba(255, 255, 255, 0.12); margin: 12px 0 16px;"></div>
                         
@@ -1538,7 +1534,7 @@
                         icon: 'fas fa-user-circle',
                         iconColor: '#0ea5e9',
                         title: 'User Profile & Designation',
-                        text: 'Displays your logged-in username and official designation. Your session credentials govern the modules and administrative capabilities available across the application.'
+                        text: 'Displays your logged-in username and official designation. Your session credentials govern the modules and capabilities available across the application.'
                     },
                     // 2b. Assigned Scopes & Divisions (Sidebar, POC/SubUser only)
                     {
@@ -1556,7 +1552,7 @@
                         icon: 'fas fa-random',
                         iconColor: '#8b5cf6',
                         title: 'Active Mode Switcher',
-                        text: 'If you hold multiple permissions (e.g. Primary Admin, Secondary Admin, POC, or Sub User), switch between workspaces seamlessly without logging out.'
+                        text: 'If you hold multiple permissions (e.g. Admin, POC, or Sub User), switch between workspaces seamlessly without logging out.'
                     },
                     // 4. Notification Center (Admin only)
                     {
@@ -1603,7 +1599,7 @@
                         icon: 'fas fa-calendar-check',
                         iconColor: '#10b981',
                         title: 'Mark Daily Attendance',
-                        text: 'Record daily attendance, review Sub-User and POC draft submissions, mark leaves, apply 2nd/4th Saturday rules, and commit monthly shift records.',
+                        text: 'Record daily attendance, review Sub-User and POC draft submissions, mark paid or unpaid leaves, and commit monthly shift records.',
                         beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(0, true); }
                     },
                     {
@@ -1612,7 +1608,7 @@
                         icon: 'fas fa-book',
                         iconColor: '#0ea5e9',
                         title: 'Leave Ledgers',
-                        text: 'Track real-time CL/RH leave balances, historical attendance logs, and compliant adjustments for every worker.',
+                        text: 'Track real-time leave balances, historical attendance logs, along with remarks/reason.',
                         beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(0, true); }
                     },
                     {
@@ -1621,7 +1617,7 @@
                         icon: 'fas fa-comment-dots',
                         iconColor: '#d946ef',
                         title: 'Remarks Inbox',
-                        text: 'Review, approve, and resolve attendance corrections and operational feedback submitted by POCs.',
+                        text: 'Review, and resolve attendance corrections and operational feedback submitted by POCs.',
                         beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(0, true); }
                     },
 
@@ -1650,7 +1646,7 @@
                         icon: 'fas fa-bullhorn',
                         iconColor: '#059669',
                         title: 'Notices & Circulars',
-                        text: 'Publish, categorize, and archive company circulars, policy notifications, and announcements.',
+                        text: 'Publish, categorize, and archive organization  circulars, policy notifications, and announcements.',
                         beforeStep: function() { window.dashboardGoToPage && window.dashboardGoToPage(1, true); }
                     },
 
@@ -1661,7 +1657,7 @@
                         icon: 'fas fa-user-shield',
                         iconColor: '#f43f5e',
                         title: 'Admin Management',
-                        text: 'Configure administrator accounts, assign primary/secondary admin roles, and grant category sharing permissions.',
+                        text: 'Configure administrator accounts, assign POCs, Sub User, and grant category sharing permissions.',
                         beforeStep: function() { 
                             window.dashboardGoToPage && window.dashboardGoToPage(2, true);
                             window.dashboardResetServiceProvider && window.dashboardResetServiceProvider(true);
@@ -1699,7 +1695,7 @@
                         icon: 'fas fa-calendar-check',
                         iconColor: '#10b981',
                         title: 'Attendance Workspace',
-                        text: 'Mark daily attendance, submit drafts for admin approval, and manage shift logs within allowed edit windows.'
+                        text: 'Mark daily attendance, submit drafts/review drafts, and manage shift logs within allowed edit windows.'
                     },
                     {
                         selector: '.dashboard-section a[href="Ledger.aspx"]',
@@ -1707,7 +1703,7 @@
                         icon: 'fas fa-book',
                         iconColor: '#0ea5e9',
                         title: 'Leave Ledgers',
-                        text: 'View leave history, accumulated balances, and approved absences for your team.'
+                        text: 'View leave history, accumulated leave balances, half-day leave, and approved absences.'
                     },
                     {
                         selector: '.dashboard-section a[href="Notices.aspx"]',
@@ -1715,7 +1711,7 @@
                         icon: 'fas fa-bullhorn',
                         iconColor: '#10b981',
                         title: 'Company Notices',
-                        text: 'Stay up to date with institutional announcements, guidelines, and office circulars.'
+                        text: 'Stay up to date with organization announcements, guidelines, and office circulars.'
                     },
                     {
                         selector: '.dashboard-section a[href="UserRemarks.aspx"]',
@@ -1723,7 +1719,7 @@
                         icon: 'fas fa-comment-alt',
                         iconColor: '#6366f1',
                         title: 'My Attendance Remarks',
-                        text: 'Send attendance correction requests or general inquiries directly to administrators with live status tracking.'
+                        text: 'Send attendance correction requests or general inquiries directly to administrators.'
                     }
                 ];
 

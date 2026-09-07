@@ -23,7 +23,10 @@ namespace AttendanceApp
             if (role != 1 && role != 4)
             {
                 Response.Redirect("Dashboard.aspx");
+                return;
             }
+
+            DBHelper.EnsureSchema();
         }
 
         [WebMethod]
@@ -1170,6 +1173,8 @@ namespace AttendanceApp
             int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
             if (role != 1 && role != 4) return "{}";
 
+            DBHelper.EnsureSchema();
+
             try
             {
                 int dbMonth = month + 1; // Convert Javascript 0-indexed month (0-11) to 1-indexed DB month (1-12)
@@ -1370,6 +1375,52 @@ namespace AttendanceApp
 
                 float totalGlobalAdj = globalAdj + catGlobalAdj;
 
+                // Query WagesAlternateServiceCharge for saved alternate service charge settings
+                object altScDetails = null;
+                if (catTierId > 0 && contractPeriodId.HasValue && contractPeriodId.Value > 0)
+                {
+                    try
+                    {
+                        using (OracleConnection conn = new OracleConnection(DBHelper.GetAttendanceDBConnection()))
+                        {
+                            conn.Open();
+                            string altSql = @"
+                                SELECT DailyRate, ScRate, EpfRate, EpfLimit, EpfCappedAmount, ServiceCharge, IsApplied, UpdatedBy, UpdatedAt
+                                FROM WagesAlternateServiceCharge
+                                WHERE Year = :Year AND Month = :Month AND TierId = :TierId AND ContractPeriodId = :CpId";
+                            using (OracleCommand cmd = new OracleCommand(altSql, conn))
+                            {
+                                cmd.BindByName = true;
+                                cmd.Parameters.Add(new OracleParameter("Year", year));
+                                cmd.Parameters.Add(new OracleParameter("Month", dbMonth));
+                                cmd.Parameters.Add(new OracleParameter("TierId", catTierId));
+                                cmd.Parameters.Add(new OracleParameter("CpId", contractPeriodId.Value));
+                                using (OracleDataReader reader = cmd.ExecuteReader())
+                                {
+                                    if (reader.Read())
+                                    {
+                                        altScDetails = new {
+                                            DailyRate = reader["DailyRate"] != DBNull.Value ? Convert.ToDecimal(reader["DailyRate"]) : 0m,
+                                            ScRate = reader["ScRate"] != DBNull.Value ? Convert.ToDecimal(reader["ScRate"]) : 3.85m,
+                                            EpfRate = reader["EpfRate"] != DBNull.Value ? Convert.ToDecimal(reader["EpfRate"]) : 13m,
+                                            EpfLimit = reader["EpfLimit"] != DBNull.Value ? Convert.ToDecimal(reader["EpfLimit"]) : 15000m,
+                                            EpfCappedAmount = reader["EpfCappedAmount"] != DBNull.Value ? Convert.ToDecimal(reader["EpfCappedAmount"]) : 1950m,
+                                            ServiceCharge = reader["ServiceCharge"] != DBNull.Value ? Convert.ToDecimal(reader["ServiceCharge"]) : 0m,
+                                            IsApplied = reader["IsApplied"] != DBNull.Value && Convert.ToInt32(reader["IsApplied"]) == 1,
+                                            UpdatedBy = reader["UpdatedBy"] != DBNull.Value ? reader["UpdatedBy"].ToString() : "",
+                                            UpdatedAt = reader["UpdatedAt"] != DBNull.Value ? Convert.ToDateTime(reader["UpdatedAt"]).ToString("dd-MMM-yyyy HH:mm") : ""
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Error querying WagesAlternateServiceCharge: " + ex.Message);
+                    }
+                }
+
                 var result = new {
                     DailyWage = dailyWage,
                     Contract = contractDetails,
@@ -1377,7 +1428,8 @@ namespace AttendanceApp
                     EpfLimit = epfLimit,
                     EpfCappedAmount = epfCappedAmount,
                     GstRate = gstRate,
-                    GlobalAdjustment = totalGlobalAdj
+                    GlobalAdjustment = totalGlobalAdj,
+                    AlternateService = altScDetails
                 };
 
                 return new JavaScriptSerializer().Serialize(result);
@@ -1385,6 +1437,82 @@ namespace AttendanceApp
             catch (Exception ex)
             {
                 return "{\"error\":\"" + ex.Message + "\"}";
+            }
+        }
+
+        [WebMethod]
+        public static string SaveWagesAlternateServiceCharge(int year, int month, string category, int contractPeriodId, decimal dailyRate, decimal scRate, decimal epfRate, decimal epfLimit, decimal epfCappedAmount, decimal serviceCharge, bool isApplied)
+        {
+            int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+            if (role != 1 && role != 4) return "{\"status\":\"error\",\"message\":\"Unauthorized access.\"}";
+
+            DBHelper.EnsureSchema();
+
+            int catTierId = 0;
+            if (!int.TryParse(category, out catTierId) || catTierId <= 0 || contractPeriodId <= 0)
+            {
+                return "{\"status\":\"error\",\"message\":\"Invalid category or contract period.\"}";
+            }
+
+            int dbMonth = month + 1;
+            string pcno = HttpContext.Current.Session["PCNO"]?.ToString() ?? "SYSTEM";
+
+            try
+            {
+                string mergeSql = @"
+                    MERGE INTO WagesAlternateServiceCharge t
+                    USING (
+                        SELECT :Year AS Year, :Month AS Month, :TierId AS TierId, :ContractPeriodId AS ContractPeriodId,
+                               :DailyRate AS DailyRate, :ScRate AS ScRate, :EpfRate AS EpfRate, :EpfLimit AS EpfLimit,
+                               :EpfCappedAmount AS EpfCappedAmount, :ServiceCharge AS ServiceCharge,
+                               :IsApplied AS IsApplied, :UpdatedBy AS UpdatedBy, SYSTIMESTAMP AS UpdatedAt
+                        FROM DUAL
+                    ) s
+                    ON (t.Year = s.Year AND t.Month = s.Month AND t.TierId = s.TierId AND t.ContractPeriodId = s.ContractPeriodId)
+                    WHEN MATCHED THEN
+                        UPDATE SET t.DailyRate = s.DailyRate,
+                                   t.ScRate = s.ScRate,
+                                   t.EpfRate = s.EpfRate,
+                                   t.EpfLimit = s.EpfLimit,
+                                   t.EpfCappedAmount = s.EpfCappedAmount,
+                                   t.ServiceCharge = s.ServiceCharge,
+                                   t.IsApplied = s.IsApplied,
+                                   t.UpdatedBy = s.UpdatedBy,
+                                   t.UpdatedAt = s.UpdatedAt
+                    WHEN NOT MATCHED THEN
+                        INSERT (Year, Month, TierId, ContractPeriodId, DailyRate, ScRate, EpfRate, EpfLimit, EpfCappedAmount, ServiceCharge, IsApplied, UpdatedBy, UpdatedAt)
+                        VALUES (s.Year, s.Month, s.TierId, s.ContractPeriodId, s.DailyRate, s.ScRate, s.EpfRate, s.EpfLimit, s.EpfCappedAmount, s.ServiceCharge, s.IsApplied, s.UpdatedBy, s.UpdatedAt)";
+
+                using (OracleConnection conn = new OracleConnection(DBHelper.GetAttendanceDBConnection()))
+                {
+                    conn.Open();
+                    using (OracleCommand cmd = new OracleCommand(mergeSql, conn))
+                    {
+                        cmd.BindByName = true;
+                        cmd.Parameters.Add(new OracleParameter("Year", year));
+                        cmd.Parameters.Add(new OracleParameter("Month", dbMonth));
+                        cmd.Parameters.Add(new OracleParameter("TierId", catTierId));
+                        cmd.Parameters.Add(new OracleParameter("ContractPeriodId", contractPeriodId));
+                        cmd.Parameters.Add(new OracleParameter("DailyRate", dailyRate));
+                        cmd.Parameters.Add(new OracleParameter("ScRate", scRate));
+                        cmd.Parameters.Add(new OracleParameter("EpfRate", epfRate));
+                        cmd.Parameters.Add(new OracleParameter("EpfLimit", epfLimit));
+                        cmd.Parameters.Add(new OracleParameter("EpfCappedAmount", epfCappedAmount));
+                        cmd.Parameters.Add(new OracleParameter("ServiceCharge", serviceCharge));
+                        cmd.Parameters.Add(new OracleParameter("IsApplied", isApplied ? 1 : 0));
+                        cmd.Parameters.Add(new OracleParameter("UpdatedBy", pcno));
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                ActionLogger.LogAction(isApplied ? "APPLY_ALT_SERVICE_CHARGE" : "REVERT_ALT_SERVICE_CHARGE", pcno,
+                    $"Alternate service charge (Daily Rate: {dailyRate}, Applied: {isApplied}) for Year: {year}, Month: {dbMonth}, Tier: {catTierId}, CP: {contractPeriodId}", null, null);
+
+                return "{\"status\":\"success\",\"message\":\"Alternate service charge saved successfully.\"}";
+            }
+            catch (Exception ex)
+            {
+                return "{\"status\":\"error\",\"message\":\"Failed to save alternate service charge: " + ex.Message.Replace("\"", "\\\"") + "\"}";
             }
         }
 

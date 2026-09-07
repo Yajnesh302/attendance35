@@ -931,6 +931,26 @@ namespace AttendanceApp.Utils
                                 CONSTRAINT PK_SubUserAnchor PRIMARY KEY (SubUserPCNO, AnchorPocPCNO)
                             )");
 
+                        EnsureTableExists(conn, "WAGESALTERNATESERVICECHARGE", @"
+                            CREATE TABLE WagesAlternateServiceCharge (
+                                Year             NUMBER(4)     NOT NULL,
+                                Month            NUMBER(2)     NOT NULL,
+                                TierId           NUMBER        NOT NULL,
+                                ContractPeriodId NUMBER        NOT NULL,
+                                DailyRate        NUMBER(10, 2) NOT NULL,
+                                ScRate           NUMBER(5, 2)  DEFAULT 3.85,
+                                EpfRate          NUMBER(5, 2)  DEFAULT 13.0,
+                                EpfLimit         NUMBER(10, 2) DEFAULT 15000.0,
+                                EpfCappedAmount  NUMBER(10, 2) DEFAULT 1950.0,
+                                ServiceCharge    NUMBER(12, 2) DEFAULT 0,
+                                IsApplied        NUMBER(1)     DEFAULT 1 NOT NULL CHECK (IsApplied IN (0, 1)),
+                                UpdatedBy        VARCHAR2(50),
+                                UpdatedAt        TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
+                                PRIMARY KEY (Year, Month, TierId, ContractPeriodId),
+                                FOREIGN KEY (TierId) REFERENCES Tiers(Id) ON DELETE CASCADE,
+                                FOREIGN KEY (ContractPeriodId) REFERENCES ContractPeriods(Id) ON DELETE CASCADE
+                            )");
+
                         EnsureAppUsersCompositePrimaryKey(conn);
                         EnsureAppUsersRoleConstraint(conn);
                         try {
