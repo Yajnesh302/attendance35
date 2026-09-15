@@ -519,6 +519,12 @@
                 "Semi-Skilled": "Staff",
                 "Unskilled": "attender"
             };
+            let pocRepCategoryDescriptions = {
+                "Skilled": "DEO",
+                "Semi-Skilled": "Office Assistant",
+                "Unskilled": "Attender"
+            };
+            let templateDbCategories = [];
             let covContractsList = [];
 
             // Global Toast Notification System
@@ -640,6 +646,9 @@
                     if (typeof onWagesTplCategoryChange === 'function') {
                         onWagesTplCategoryChange();
                     }
+                    if (typeof onPocRepCategoryChange === 'function') {
+                        onPocRepCategoryChange();
+                    }
                 }
             }
 
@@ -675,22 +684,206 @@
                 evt.currentTarget.style.color = '#4f46e5';
                 evt.currentTarget.style.borderBottom = '2px solid #4f46e5';
                 evt.currentTarget.style.fontWeight = '700';
+
+                if (tabId === 'tab-wages') {
+                    onWagesTplCategoryChange();
+                } else if (tabId === 'tab-poc-report') {
+                    onPocRepCategoryChange();
+                }
+            }
+
+            function loadDatabaseCategoriesForTemplates() {
+                return fetch('Documents.aspx/GetDatabaseCategoriesForTemplates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    templateDbCategories = JSON.parse(res.d || "[]");
+                    populateTemplateCategoryDropdowns();
+                })
+                .catch(err => {
+                    console.error("Failed to load categories for templates:", err);
+                    populateTemplateCategoryDropdowns();
+                });
+            }
+
+            function populateTemplateCategoryDropdowns() {
+                const wagesSelect = document.getElementById("wagesTplCategorySelect");
+                const pocSelect = document.getElementById("pocRepCategorySelect");
+
+                let cats = templateDbCategories;
+                if (!cats || cats.length === 0) {
+                    cats = [
+                        { TierId: 1, TierName: "Skilled", DisplayName: "Skilled", RoleLabel: "DEO" },
+                        { TierId: 2, TierName: "Semi-Skilled", DisplayName: "Semi-Skilled", RoleLabel: "Office Assistant" },
+                        { TierId: 3, TierName: "Unskilled", DisplayName: "Unskilled", RoleLabel: "Attender" }
+                    ];
+                }
+
+                if (wagesSelect) {
+                    const currentWagesVal = wagesSelect.value;
+                    wagesSelect.innerHTML = "";
+                    cats.forEach(c => {
+                        const opt = document.createElement("option");
+                        opt.value = c.TierName;
+                        const label = c.MainCategory ? `${c.MainCategory} › ${c.TierName}` : c.TierName;
+                        opt.textContent = label + (c.RoleLabel ? ` (#${c.RoleLabel})` : "");
+                        opt.setAttribute("data-tier-id", c.TierId);
+                        opt.setAttribute("data-role-label", c.RoleLabel || "");
+                        wagesSelect.appendChild(opt);
+                    });
+                    if (currentWagesVal && Array.from(wagesSelect.options).some(o => o.value === currentWagesVal)) {
+                        wagesSelect.value = currentWagesVal;
+                    }
+                    onWagesTplCategoryChange();
+                }
+
+                if (pocSelect) {
+                    const currentPocVal = pocSelect.value;
+                    pocSelect.innerHTML = "";
+                    cats.forEach(c => {
+                        const opt = document.createElement("option");
+                        opt.value = c.TierName;
+                        const label = c.MainCategory ? `${c.MainCategory} › ${c.TierName}` : c.TierName;
+                        opt.textContent = label + (c.RoleLabel ? ` (#${c.RoleLabel})` : "");
+                        opt.setAttribute("data-tier-id", c.TierId);
+                        opt.setAttribute("data-role-label", c.RoleLabel || "");
+                        pocSelect.appendChild(opt);
+                    });
+                    if (currentPocVal && Array.from(pocSelect.options).some(o => o.value === currentPocVal)) {
+                        pocSelect.value = currentPocVal;
+                    }
+                    onPocRepCategoryChange();
+                }
             }
 
             function onWagesTplCategoryChange() {
                 const catSelect = document.getElementById("wagesTplCategorySelect");
-                if (catSelect) {
-                    const catVal = catSelect.value;
-                    const descInput = document.getElementById("wagesTplCategoryDescInput");
-                    if (descInput) {
-                        descInput.value = wagesCategoryDescriptions[catVal] || "";
-                    }
+                if (!catSelect || !catSelect.value) return;
+                const catVal = catSelect.value;
+                const safeCat = catVal.replace(/-/g, '_').replace(/ /g, '_');
+                const descInput = document.getElementById("wagesTplCategoryDescInput");
+                if (descInput) {
+                    descInput.value = wagesCategoryDescriptions[catVal] || wagesCategoryDescriptions[safeCat] || "";
                 }
+            }
+
+            function onWagesTplCategoryDescInput() {
+                const catSelect = document.getElementById("wagesTplCategorySelect");
+                const descInput = document.getElementById("wagesTplCategoryDescInput");
+                if (catSelect && descInput && catSelect.value) {
+                    const catVal = catSelect.value;
+                    const safeCat = catVal.replace(/-/g, '_').replace(/ /g, '_');
+                    wagesCategoryDescriptions[catVal] = descInput.value;
+                    wagesCategoryDescriptions[safeCat] = descInput.value;
+                }
+            }
+
+            function saveWagesCurrentCategoryDesc() {
+                const catSelect = document.getElementById("wagesTplCategorySelect");
+                const descInput = document.getElementById("wagesTplCategoryDescInput");
+                if (!catSelect || !catSelect.value || !descInput || !descInput.value.trim()) {
+                    showToast("Category and Description cannot be empty.", "warning");
+                    return;
+                }
+                const catVal = catSelect.value;
+                const descVal = descInput.value.trim();
+
+                fetch('Documents.aspx/SaveCategoryDescription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        category: catVal,
+                        description: descVal,
+                        templateType: 'wages'
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    const data = JSON.parse(res.d || "{}");
+                    if (data.status === "success") {
+                        const safeCat = catVal.replace(/-/g, '_').replace(/ /g, '_');
+                        wagesCategoryDescriptions[catVal] = descVal;
+                        wagesCategoryDescriptions[safeCat] = descVal;
+                        showToast(`Description for ${catVal} saved successfully.`, "success");
+                    } else {
+                        showToast(data.message || "Failed to save category description.", "error");
+                    }
+                })
+                .catch(() => showToast("Error saving category description.", "error"));
+            }
+
+            function onPocRepCategoryChange() {
+                const catSelect = document.getElementById("pocRepCategorySelect");
+                if (!catSelect || !catSelect.value) return;
+                const catVal = catSelect.value;
+                const safeCat = catVal.replace(/-/g, '_').replace(/ /g, '_');
+                const descInput = document.getElementById("pocRepCategoryDescInput");
+                if (!descInput) return;
+
+                const opt = catSelect.options[catSelect.selectedIndex];
+                const roleLabel = opt ? opt.getAttribute("data-role-label") : "";
+
+                const desc = pocRepCategoryDescriptions[catVal]
+                          || pocRepCategoryDescriptions[safeCat]
+                          || roleLabel
+                          || wagesCategoryDescriptions[catVal]
+                          || wagesCategoryDescriptions[safeCat]
+                          || (catVal.toLowerCase().includes("semi") ? "Office Assistant" : "DEO");
+                descInput.value = desc || "";
+            }
+
+            function onPocRepCategoryDescInput() {
+                const catSelect = document.getElementById("pocRepCategorySelect");
+                const descInput = document.getElementById("pocRepCategoryDescInput");
+                if (catSelect && descInput && catSelect.value) {
+                    const catVal = catSelect.value;
+                    const safeCat = catVal.replace(/-/g, '_').replace(/ /g, '_');
+                    pocRepCategoryDescriptions[catVal] = descInput.value;
+                    pocRepCategoryDescriptions[safeCat] = descInput.value;
+                }
+            }
+
+            function savePocRepCurrentCategoryDesc() {
+                const catSelect = document.getElementById("pocRepCategorySelect");
+                const descInput = document.getElementById("pocRepCategoryDescInput");
+                if (!catSelect || !catSelect.value || !descInput || !descInput.value.trim()) {
+                    showToast("Category and Manpower Description cannot be empty.", "warning");
+                    return;
+                }
+                const catVal = catSelect.value;
+                const descVal = descInput.value.trim();
+
+                fetch('Documents.aspx/SaveCategoryDescription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        category: catVal,
+                        description: descVal,
+                        templateType: 'poc_report'
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    const data = JSON.parse(res.d || "{}");
+                    if (data.status === "success") {
+                        const safeCat = catVal.replace(/-/g, '_').replace(/ /g, '_');
+                        pocRepCategoryDescriptions[catVal] = descVal;
+                        pocRepCategoryDescriptions[safeCat] = descVal;
+                        showToast(`Manpower description for ${catVal} saved successfully.`, "success");
+                    } else {
+                        showToast(data.message || "Failed to save category description.", "error");
+                    }
+                })
+                .catch(() => showToast("Error saving category description.", "error"));
             }
 
             // On Page Load
             document.addEventListener("DOMContentLoaded", () => {
-                loadTemplates();
+                loadDatabaseCategoriesForTemplates().then(() => {
+                    loadTemplates();
+                });
                 populateSelectors();
                 // check for custom header on page load
                 const savedHeader = localStorage.getItem('satisfactory_custom_header');
@@ -3150,9 +3343,22 @@ p { margin: 0; padding: 0; }
                         if (dict.WagesHdrPeriod) tplWagesHdrPeriod = dict.WagesHdrPeriod;
                         if (dict.WagesHdrVendor) tplWagesHdrVendor = dict.WagesHdrVendor;
                         if (dict.WagesHdrPayment) tplWagesHdrPayment = dict.WagesHdrPayment;
-                        if (dict.WagesDesc_Skilled) wagesCategoryDescriptions["Skilled"] = dict.WagesDesc_Skilled;
-                        if (dict.WagesDesc_Semi_Skilled) wagesCategoryDescriptions["Semi-Skilled"] = dict.WagesDesc_Semi_Skilled;
-                        if (dict.WagesDesc_Unskilled) wagesCategoryDescriptions["Unskilled"] = dict.WagesDesc_Unskilled;
+
+                        // Dynamically populate all category descriptions from CertificateTemplates
+                        Object.keys(dict).forEach(key => {
+                            if (key.startsWith("WagesDesc_")) {
+                                const rawKey = key.substring("WagesDesc_".length);
+                                wagesCategoryDescriptions[rawKey] = dict[key];
+                                const readable = rawKey.replace(/_/g, " ");
+                                wagesCategoryDescriptions[readable] = dict[key];
+                            }
+                            if (key.startsWith("PocRepManpower_")) {
+                                const rawKey = key.substring("PocRepManpower_".length);
+                                pocRepCategoryDescriptions[rawKey] = dict[key];
+                                const readable = rawKey.replace(/_/g, " ");
+                                pocRepCategoryDescriptions[readable] = dict[key];
+                            }
+                        });
 
                         const covPhoneEl = document.getElementById("covPhoneInput");
                         const covRefNoEl = document.getElementById("covRefNoInput");
@@ -3215,11 +3421,23 @@ p { margin: 0; padding: 0; }
                         if (rep3) rep3.value = tplRepTpl2H1;
                         if (rep4) rep4.value = tplRepTpl2H2;
 
+                        if (dict.PocRepTopLine1 && document.getElementById("txtPocRepTopLine1")) document.getElementById("txtPocRepTopLine1").value = dict.PocRepTopLine1;
+                        if (dict.PocRepTopLine2 && document.getElementById("txtPocRepTopLine2")) document.getElementById("txtPocRepTopLine2").value = dict.PocRepTopLine2;
+                        if (dict.PocRepTopFontSize && document.getElementById("pocRepTopFontSizeInput")) document.getElementById("pocRepTopFontSizeInput").value = dict.PocRepTopFontSize;
+                        if (dict.PocRepTopAlign && document.getElementById("pocRepTopAlignInput")) document.getElementById("pocRepTopAlignInput").value = dict.PocRepTopAlign;
+                        if (dict.PocRepCertParagraph && document.getElementById("txtPocRepCertParagraph")) document.getElementById("txtPocRepCertParagraph").value = dict.PocRepCertParagraph;
+                        if (dict.PocRepSignatures && document.getElementById("txtPocRepSignatures")) document.getElementById("txtPocRepSignatures").value = dict.PocRepSignatures;
+                        if (dict.PocRepBottomFontSize && document.getElementById("pocRepBottomFontSizeInput")) document.getElementById("pocRepBottomFontSizeInput").value = dict.PocRepBottomFontSize;
+                        if (dict.PocRepBottomAlign && document.getElementById("pocRepBottomAlignInput")) document.getElementById("pocRepBottomAlignInput").value = dict.PocRepBottomAlign;
+
                         updateHeaderPreview();
                         updateSatPreview();
                         updateCovPreview();
                         if (typeof onWagesTplCategoryChange === 'function') {
                             onWagesTplCategoryChange();
+                        }
+                        if (typeof onPocRepCategoryChange === 'function') {
+                            onPocRepCategoryChange();
                         }
                     })
                     .catch(() => {
@@ -3478,6 +3696,59 @@ p { margin: 0; padding: 0; }
                         }
                     })
                     .catch(() => showToast("Error saving templates.", "error"));
+            }
+
+            function savePocReportTpl() {
+                const topLine1 = document.getElementById("txtPocRepTopLine1") ? document.getElementById("txtPocRepTopLine1").value : "";
+                const topLine2 = document.getElementById("txtPocRepTopLine2") ? document.getElementById("txtPocRepTopLine2").value : "";
+                const topFontSize = document.getElementById("pocRepTopFontSizeInput") ? document.getElementById("pocRepTopFontSizeInput").value : "11";
+                const topAlign = document.getElementById("pocRepTopAlignInput") ? document.getElementById("pocRepTopAlignInput").value : "center";
+                const certPara = document.getElementById("txtPocRepCertParagraph") ? document.getElementById("txtPocRepCertParagraph").value : "";
+                const signatures = document.getElementById("txtPocRepSignatures") ? document.getElementById("txtPocRepSignatures").value : "";
+                const bottomFontSize = document.getElementById("pocRepBottomFontSizeInput") ? document.getElementById("pocRepBottomFontSizeInput").value : "11";
+                const bottomAlign = document.getElementById("pocRepBottomAlignInput") ? document.getElementById("pocRepBottomAlignInput").value : "left";
+                const curCat = document.getElementById("pocRepCategorySelect") ? document.getElementById("pocRepCategorySelect").value : "";
+                const curDesc = document.getElementById("pocRepCategoryDescInput") ? document.getElementById("pocRepCategoryDescInput").value : "";
+
+                if (!topLine1.trim() || !topLine2.trim() || !certPara.trim()) {
+                    showToast("Header lines and certification statement cannot be empty.", "warning");
+                    return;
+                }
+
+                if (curCat && curDesc) {
+                    pocRepCategoryDescriptions[curCat] = curDesc;
+                    const safeCat = curCat.replace(/-/g, '_').replace(/ /g, '_');
+                    pocRepCategoryDescriptions[safeCat] = curDesc;
+                }
+
+                fetch('Documents.aspx/SavePocReportTemplates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topLine1: topLine1,
+                        topLine2: topLine2,
+                        topFontSize: topFontSize,
+                        topAlign: topAlign,
+                        certPara: certPara,
+                        signatures: signatures,
+                        bottomFontSize: bottomFontSize,
+                        bottomAlign: bottomAlign,
+                        category: curCat,
+                        categoryDesc: curDesc,
+                        manpowerDefault: "DEO",
+                        allCategoryDescriptionsJson: JSON.stringify(pocRepCategoryDescriptions)
+                    })
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        const data = JSON.parse(res.d || "{}");
+                        if (data.status === "success") {
+                            showToast(data.message || "POC Monthly Report templates saved successfully.", "success");
+                        } else {
+                            showToast(data.message || "Failed to save templates.", "error");
+                        }
+                    })
+                    .catch(() => showToast("Error saving POC report templates.", "error"));
             }
 
             // Fetch Live Attendance Data

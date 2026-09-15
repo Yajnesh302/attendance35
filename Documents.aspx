@@ -1917,6 +1917,8 @@
                     <button type="button" class="tab-btn" onclick="switchTemplateTab(event, 'tab-report')"
                         style="padding: 8px 16px; font-weight: 600; border: none; background: none; color: #64748b; cursor: pointer; transition: all 0.15s ease;">Attendance
                         Report</button>
+                    <button type="button" class="tab-btn" onclick="switchTemplateTab(event, 'tab-poc-report')"
+                        style="padding: 8px 16px; font-weight: 600; border: none; background: none; color: #64748b; cursor: pointer; transition: all 0.15s ease;"><i class="fas fa-file-invoice-dollar mr-1"></i>POC Monthly Report</button>
                 </div>
 
                 <!-- Tab: Attendance Certificate -->
@@ -2145,18 +2147,21 @@
                 <div id="tab-wages" class="tab-content" style="display: none;">
                     <div class="settings-parameter-grid">
                         <div>
-                            <label class="form-label-bold">Wages Category (To load/edit default description)</label>
+                            <label class="form-label-bold">Wages Category (from Database)</label>
                             <select id="wagesTplCategorySelect" class="form-control-custom"
                                 onchange="onWagesTplCategoryChange()">
-                                <option value="Skilled">Skilled</option>
-                                <option value="Semi-Skilled">Semi-Skilled</option>
-                                <option value="Unskilled">Unskilled</option>
+                                <option value="">Loading categories...</option>
                             </select>
+                            <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Categories loaded directly from database tiers.</small>
                         </div>
                         <div>
-                            <label class="form-label-bold">Default Category Description (Saved globally for selected
-                                category)</label>
-                            <input type="text" id="wagesTplCategoryDescInput" class="form-control-custom" />
+                            <label class="form-label-bold">Default Category Description (Saved globally for selected category)</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="wagesTplCategoryDescInput" class="form-control-custom" oninput="onWagesTplCategoryDescInput()" />
+                                <button type="button" class="btn-custom" onclick="saveWagesCurrentCategoryDesc()" style="margin: 0; white-space: nowrap; padding: 6px 14px; height: 38px; background: #4f46e5; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;" title="Save Category Description">
+                                    <i class="fas fa-save mr-1"></i> Save
+                                </button>
+                            </div>
                         </div>
 
                     </div>
@@ -2243,6 +2248,103 @@
                         <button type="button" class="btn-custom btn-load"
                             style="background-color: #6366f1; color: white;" onclick="saveReportTpl()"><i
                                 class="fas fa-save"></i> Save Report Templates</button>
+                    </div>
+                </div>
+
+                <!-- Tab: POC Monthly Report -->
+                <div id="tab-poc-report" class="tab-content" style="display: none;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+                        <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-heading mr-2 text-primary"></i>Top Header Lines (Lines 1 &amp; 2)</h6>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 16px; margin-bottom: 14px;">
+                            <div>
+                                <label class="form-label-bold">Line 1 Template (Vendor Name)</label>
+                                <textarea id="txtPocRepTopLine1" class="form-control-custom" style="height: 60px; min-height: 60px; resize: vertical;" placeholder="M/s {VendorName}">M/s {VendorName}</textarea>
+                                <small style="color: #64748b; font-size: 0.75rem;">Placeholders: <code>{VendorName}</code></small>
+                            </div>
+                            <div>
+                                <label class="form-label-bold">Line 2 Template (Recommendation Header)</label>
+                                <textarea id="txtPocRepTopLine2" class="form-control-custom" style="height: 60px; min-height: 60px; resize: vertical;" placeholder="MONTHLY REPORT AND RECOMMENDATION ON HIRING OF MANPOWER SERVICES FOR MAKING PAYMENT FOR THE MONTH OF {Month:upper} - {Year}">MONTHLY REPORT AND RECOMMENDATION ON HIRING OF MANPOWER SERVICES FOR MAKING PAYMENT FOR THE MONTH OF {Month:upper} - {Year}</textarea>
+                                <small style="color: #64748b; font-size: 0.75rem;">Placeholders: <code>{Month}</code>, <code>{Month:upper}</code>, <code>{Year}</code></small>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div>
+                                <label class="form-label-bold">Top Lines Font Size (pt)</label>
+                                <input type="number" id="pocRepTopFontSizeInput" class="form-control-custom" value="11" min="8" max="24" step="1" />
+                            </div>
+                            <div>
+                                <label class="form-label-bold">Top Lines Alignment</label>
+                                <select id="pocRepTopAlignInput" class="form-control-custom">
+                                    <option value="center" selected="selected">Center</option>
+                                    <option value="left">Left</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 20px;">
+                        <h6 class="font-weight-bold text-dark mb-2"><i class="fas fa-user-tag mr-2 text-primary"></i>Manpower Column Settings (Category Description)</h6>
+                        <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 14px;">
+                            Select any category present in the database to configure the exact role/designation to display in the <strong>Manpower</strong> column of the report (e.g. <code>DEO</code> for Skilled, <code>Office Assistant</code> for Semi-Skilled).
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 8px;">
+                            <div>
+                                <label class="form-label-bold">Select Category (from Database)</label>
+                                <select id="pocRepCategorySelect" class="form-control-custom" onchange="onPocRepCategoryChange()">
+                                    <option value="">Loading categories...</option>
+                                </select>
+                                <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Categories loaded directly from database tiers.</small>
+                            </div>
+                            <div>
+                                <label class="form-label-bold">Manpower Description for Selected Category</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="pocRepCategoryDescInput" class="form-control-custom" placeholder="e.g. DEO, Office Assistant" oninput="onPocRepCategoryDescInput()" />
+                                    <button type="button" class="btn-custom" onclick="savePocRepCurrentCategoryDesc()" style="margin: 0; white-space: nowrap; padding: 6px 14px; height: 38px; background: #4f46e5; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;" title="Save Category Description">
+                                        <i class="fas fa-save mr-1"></i> Save
+                                    </button>
+                                </div>
+                                <small style="color: #64748b; font-size: 0.75rem; display: block; margin-top: 4px;">Template key: <code>PocRepManpower_&lt;Category&gt;</code></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 16px;">
+                        <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-file-signature mr-2 text-primary"></i>Bottom Certification &amp; Signatures</h6>
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 14px;">
+                            <div>
+                                <label class="form-label-bold">Certification Statement (Paragraph below table)</label>
+                                <textarea id="txtPocRepCertParagraph" class="form-control-custom" style="height: 80px; min-height: 60px; resize: vertical;">It is certified that the above mentioned individuals have worked during office hours on the number of days as mentioned against their names and the individuals have received their previous month salary &amp; EPF contribution from the service provider.</textarea>
+                            </div>
+                            <div>
+                                <label class="form-label-bold">Signatures &amp; Recipient Template</label>
+                                <textarea id="txtPocRepSignatures" class="form-control-custom" style="height: 90px; min-height: 60px; resize: vertical;">(Point of Contact)
+Signature of Group Director
+To
+    {Directorate}</textarea>
+                                <small style="color: #64748b; font-size: 0.75rem;">Placeholders: <code>{Directorate}</code></small>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div>
+                                <label class="form-label-bold">Bottom Section Font Size (pt)</label>
+                                <input type="number" id="pocRepBottomFontSizeInput" class="form-control-custom" value="11" min="8" max="24" step="1" />
+                            </div>
+                            <div>
+                                <label class="form-label-bold">Bottom Section Alignment</label>
+                                <select id="pocRepBottomAlignInput" class="form-control-custom">
+                                    <option value="left" selected="selected">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+                        <button type="button" class="btn-custom btn-load" style="background-color: #6366f1; color: white;" onclick="savePocReportTpl()">
+                            <i class="fas fa-save"></i> Save POC Monthly Report Templates
+                        </button>
                     </div>
                 </div>
 

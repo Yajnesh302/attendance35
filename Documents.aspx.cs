@@ -846,6 +846,54 @@ namespace AttendanceApp
                 {
                     dict["WagesHdrPayment"] = "Payment for the period <b>{PaymentStart}</b> to <b>{PaymentEnd}</b> - <b>{WorkingDays} days</b>";
                 }
+                if (!dict.ContainsKey("PocRepTopLine1"))
+                {
+                    dict["PocRepTopLine1"] = "M/s {VendorName}";
+                }
+                if (!dict.ContainsKey("PocRepTopLine2"))
+                {
+                    dict["PocRepTopLine2"] = "MONTHLY REPORT AND RECOMMENDATION ON HIRING OF MANPOWER SERVICES FOR MAKING PAYMENT FOR THE MONTH OF {Month:upper} - {Year}";
+                }
+                if (!dict.ContainsKey("PocRepTopFontSize"))
+                {
+                    dict["PocRepTopFontSize"] = "11";
+                }
+                if (!dict.ContainsKey("PocRepTopAlign"))
+                {
+                    dict["PocRepTopAlign"] = "center";
+                }
+                if (!dict.ContainsKey("PocRepCertParagraph"))
+                {
+                    dict["PocRepCertParagraph"] = "It is certified that the above mentioned individuals have worked during office hours on the number of days as mentioned against their names and the individuals have received their previous month salary & EPF contribution from the service provider.";
+                }
+                if (!dict.ContainsKey("PocRepSignatures"))
+                {
+                    dict["PocRepSignatures"] = "(Point of Contact)\r\nSignature of Group Director\r\nTo\r\n    {Directorate}";
+                }
+                if (!dict.ContainsKey("PocRepBottomFontSize"))
+                {
+                    dict["PocRepBottomFontSize"] = "11";
+                }
+                if (!dict.ContainsKey("PocRepBottomAlign"))
+                {
+                    dict["PocRepBottomAlign"] = "left";
+                }
+                if (!dict.ContainsKey("PocRepManpower_Skilled"))
+                {
+                    dict["PocRepManpower_Skilled"] = "DEO";
+                }
+                if (!dict.ContainsKey("PocRepManpower_Semi_Skilled"))
+                {
+                    dict["PocRepManpower_Semi_Skilled"] = "Office Assistant";
+                }
+                if (!dict.ContainsKey("PocRepManpower_Unskilled"))
+                {
+                    dict["PocRepManpower_Unskilled"] = "Attender";
+                }
+                if (!dict.ContainsKey("PocRepManpower_Default"))
+                {
+                    dict["PocRepManpower_Default"] = "DEO";
+                }
 
                 return new JavaScriptSerializer().Serialize(dict);
             }
@@ -877,7 +925,19 @@ namespace AttendanceApp
                     { "WagesHdrPayment", "Payment for the period <b>{PaymentStart}</b> to <b>{PaymentEnd}</b> - <b>{WorkingDays} days</b>" },
                     { "WagesDesc_Skilled", "Data Entry Operators(Skilled)" },
                     { "WagesDesc_Semi_Skilled", "Staff" },
-                    { "WagesDesc_Unskilled", "attender" }
+                    { "WagesDesc_Unskilled", "attender" },
+                    { "PocRepTopLine1", "M/s {VendorName}" },
+                    { "PocRepTopLine2", "MONTHLY REPORT AND RECOMMENDATION ON HIRING OF MANPOWER SERVICES FOR MAKING PAYMENT FOR THE MONTH OF {Month:upper} - {Year}" },
+                    { "PocRepTopFontSize", "11" },
+                    { "PocRepTopAlign", "center" },
+                    { "PocRepCertParagraph", "It is certified that the above mentioned individuals have worked during office hours on the number of days as mentioned against their names and the individuals have received their previous month salary & EPF contribution from the service provider." },
+                    { "PocRepSignatures", "(Point of Contact)\r\nSignature of Group Director\r\nTo\r\n    {Directorate}" },
+                    { "PocRepBottomFontSize", "11" },
+                    { "PocRepBottomAlign", "left" },
+                    { "PocRepManpower_Skilled", "DEO" },
+                    { "PocRepManpower_Semi_Skilled", "Office Assistant" },
+                    { "PocRepManpower_Unskilled", "Attender" },
+                    { "PocRepManpower_Default", "DEO" }
                 };
                 return new JavaScriptSerializer().Serialize(fallback);
             }
@@ -1126,7 +1186,7 @@ namespace AttendanceApp
 
             try
             {
-                string safeCategory = category.Replace("-", "_");
+                string safeCategory = category.Replace("-", "_").Replace(" ", "_");
                 string mergeSql = @"
                     MERGE INTO CertificateTemplates t
                     USING (
@@ -1160,6 +1220,167 @@ namespace AttendanceApp
                 ActionLogger.LogAction("EDIT_TEMPLATE", "SYSTEM", "Updated Wages Certificate Template Headings and Category Description for " + category, null, null);
 
                 return "{\"status\":\"success\",\"message\":\"Templates saved successfully.\"}";
+            }
+            catch (Exception ex)
+            {
+                return "{\"status\":\"error\",\"message\":\"Failed to save templates: " + ex.Message.Replace("\"", "\\\"") + "\"}";
+            }
+        }
+
+        [WebMethod]
+        public static string GetDatabaseCategoriesForTemplates()
+        {
+            int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+            if (role != 1 && role != 4) return "[]";
+
+            try
+            {
+                string sql = @"
+                    SELECT t.Id AS TierId, t.TierName, NVL(t.RoleLabel, '') AS RoleLabel, 
+                           NVL(mc.Name, '') AS MainCategoryName,
+                           NVL(mc.Name, '') || ' › ' || t.TierName || NVL2(t.RoleLabel, ' (#' || t.RoleLabel || ')', '') AS DisplayName
+                    FROM Tiers t
+                    LEFT JOIN MainCategory mc ON t.MainCategoryId = mc.Id
+                    ORDER BY mc.Name ASC, t.SortOrder ASC, t.TierName ASC";
+                DataTable dt = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), sql);
+                var list = new List<object>();
+                foreach (DataRow r in dt.Rows)
+                {
+                    list.Add(new
+                    {
+                        TierId = Convert.ToInt32(r["TierId"]),
+                        TierName = r["TierName"].ToString(),
+                        RoleLabel = r["RoleLabel"].ToString(),
+                        MainCategory = r["MainCategoryName"].ToString(),
+                        DisplayName = r["DisplayName"] != DBNull.Value ? r["DisplayName"].ToString() : r["TierName"].ToString()
+                    });
+                }
+                return new JavaScriptSerializer().Serialize(list);
+            }
+            catch (Exception)
+            {
+                return "[]";
+            }
+        }
+
+        [WebMethod]
+        public static string SaveCategoryDescription(string category, string description, string templateType = "poc_report")
+        {
+            int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+            if (role != 1 && role != 4) return "{\"status\":\"error\",\"message\":\"Unauthorized access.\"}";
+
+            if (string.IsNullOrWhiteSpace(category))
+            {
+                return "{\"status\":\"error\",\"message\":\"Category name cannot be empty.\"}";
+            }
+
+            try
+            {
+                string safeCategory = category.Replace("-", "_").Replace(" ", "_");
+                string prefix = templateType == "wages" ? "WagesDesc_" : "PocRepManpower_";
+                string key = prefix + safeCategory;
+
+                string mergeSql = @"
+                    MERGE INTO CertificateTemplates t
+                    USING (
+                        SELECT :Key AS TemplateKey, :Val AS TemplateValue FROM DUAL
+                    ) s
+                    ON (t.TemplateKey = s.TemplateKey)
+                    WHEN MATCHED THEN
+                        UPDATE SET t.TemplateValue = s.TemplateValue
+                    WHEN NOT MATCHED THEN
+                        INSERT (TemplateKey, TemplateValue) VALUES (s.TemplateKey, s.TemplateValue)";
+
+                DBHelper.ExecuteNonQuery(DBHelper.GetAttendanceDBConnection(), mergeSql,
+                    new OracleParameter("Key", key),
+                    new OracleParameter("Val", description ?? ""));
+
+                ActionLogger.LogAction("EDIT_TEMPLATE", "SYSTEM", $"Updated {templateType} description for category {category} ({key})", null, null);
+
+                return "{\"status\":\"success\",\"message\":\"Category description saved successfully.\"}";
+            }
+            catch (Exception ex)
+            {
+                return "{\"status\":\"error\",\"message\":\"Failed to save category description: " + ex.Message.Replace("\"", "\\\"") + "\"}";
+            }
+        }
+
+        [WebMethod]
+        public static string SavePocReportTemplates(string topLine1, string topLine2, string topFontSize, string topAlign, string certPara, string signatures, string bottomFontSize, string bottomAlign, string category = "", string categoryDesc = "", string manpowerDefault = "DEO", string allCategoryDescriptionsJson = "")
+        {
+            int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+            if (role != 1 && role != 4) return "{\"status\":\"error\",\"message\":\"Unauthorized access.\"}";
+
+            try
+            {
+                List<Tuple<string, string>> kvPairs = new List<Tuple<string, string>>
+                {
+                    new Tuple<string, string>("PocRepTopLine1", topLine1 ?? ""),
+                    new Tuple<string, string>("PocRepTopLine2", topLine2 ?? ""),
+                    new Tuple<string, string>("PocRepTopFontSize", topFontSize ?? "11"),
+                    new Tuple<string, string>("PocRepTopAlign", topAlign ?? "center"),
+                    new Tuple<string, string>("PocRepCertParagraph", certPara ?? ""),
+                    new Tuple<string, string>("PocRepSignatures", signatures ?? ""),
+                    new Tuple<string, string>("PocRepBottomFontSize", bottomFontSize ?? "11"),
+                    new Tuple<string, string>("PocRepBottomAlign", bottomAlign ?? "left"),
+                    new Tuple<string, string>("PocRepManpower_Default", manpowerDefault ?? "DEO")
+                };
+
+                // Add current category description if passed
+                if (!string.IsNullOrWhiteSpace(category) && !string.IsNullOrWhiteSpace(categoryDesc))
+                {
+                    string safeCat = category.Replace("-", "_").Replace(" ", "_");
+                    kvPairs.Add(new Tuple<string, string>("PocRepManpower_" + safeCat, categoryDesc.Trim()));
+                }
+
+                // Add all category descriptions dictionary if passed
+                if (!string.IsNullOrWhiteSpace(allCategoryDescriptionsJson))
+                {
+                    try
+                    {
+                        var dict = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(allCategoryDescriptionsJson);
+                        if (dict != null)
+                        {
+                            foreach (var pair in dict)
+                            {
+                                if (!string.IsNullOrWhiteSpace(pair.Key))
+                                {
+                                    string sCat = pair.Key.Replace("-", "_").Replace(" ", "_");
+                                    kvPairs.Add(new Tuple<string, string>("PocRepManpower_" + sCat, pair.Value ?? ""));
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                using (OracleConnection conn = new OracleConnection(DBHelper.GetAttendanceDBConnection()))
+                {
+                    conn.Open();
+                    string mergeSql = @"
+                        MERGE INTO CertificateTemplates t
+                        USING (SELECT :K AS TemplateKey, :V AS TemplateValue FROM DUAL) s
+                        ON (t.TemplateKey = s.TemplateKey)
+                        WHEN MATCHED THEN
+                            UPDATE SET t.TemplateValue = s.TemplateValue
+                        WHEN NOT MATCHED THEN
+                            INSERT (TemplateKey, TemplateValue) VALUES (s.TemplateKey, s.TemplateValue)";
+
+                    foreach (var item in kvPairs)
+                    {
+                        using (OracleCommand cmd = new OracleCommand(mergeSql, conn))
+                        {
+                            cmd.BindByName = true;
+                            cmd.Parameters.Add(new OracleParameter("K", item.Item1));
+                            cmd.Parameters.Add(new OracleParameter("V", item.Item2));
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+
+                ActionLogger.LogAction("EDIT_TEMPLATE", "SYSTEM", "Updated POC Monthly Report Templates & Category Descriptions", null, null);
+
+                return "{\"status\":\"success\",\"message\":\"POC Monthly Report templates saved successfully.\"}";
             }
             catch (Exception ex)
             {

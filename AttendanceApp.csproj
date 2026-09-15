@@ -205,6 +205,20 @@
     <Compile Include="Wages.aspx.designer.cs">
       <DependentUpon>Wages.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Reports.aspx.cs">
+      <DependentUpon>Reports.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Reports.aspx.designer.cs">
+      <DependentUpon>Reports.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="MonthlyAttendanceReport.aspx.cs">
+      <DependentUpon>MonthlyAttendanceReport.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="MonthlyAttendanceReport.aspx.designer.cs">
+      <DependentUpon>MonthlyAttendanceReport.aspx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Login.aspx" />
@@ -224,6 +238,8 @@
     <Content Include="Notices.aspx" />
     <Content Include="Documents.aspx" />
     <Content Include="Wages.aspx" />
+    <Content Include="Reports.aspx" />
+    <Content Include="MonthlyAttendanceReport.aspx" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

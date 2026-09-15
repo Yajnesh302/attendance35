@@ -1018,6 +1018,27 @@
                 </a>
                 <% } %>
             </div>
+
+            <% if (!IsSubUserMode) { %>
+            <!-- Second Row: Reports Card (maintains exact same size as 4-column grid above) -->
+            <div class="dashboard-grid-4" style="margin-top: 20px;">
+                <a href="Reports.aspx" class="card-custom card-theme-amber">
+                    <div class="card-icon-box">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="card-content-body">
+                        <h3>Reports</h3>
+                        <p>Generate monthly attendance &amp; statutory recommendation reports</p>
+                    </div>
+                    <div class="card-circle-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <svg class="card-wave-accent" viewBox="0 0 100 100" fill="currentColor">
+                        <path d="M0 50 Q 25 30, 50 50 T 100 50 L 100 100 L 0 100 Z" opacity="0.3"/>
+                    </svg>
+                </a>
+            </div>
+            <% } %>
         </div>
 
     <% } %>
