@@ -81,6 +81,17 @@ namespace AttendanceApp
         }
 
         [WebMethod]
+        public static string CheckAttendanceCompleteness(int year, int month, string category, int? contractPeriodId)
+        {
+            int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+            if (role != 1 && role != 4) return "{\"HasIncomplete\":false}";
+
+            string pcno = HttpContext.Current.Session["PCNO"]?.ToString() ?? "";
+            var result = DBHelper.CheckMonthAttendanceCompleteness(year, month, category, contractPeriodId, role, pcno);
+            return new JavaScriptSerializer().Serialize(result);
+        }
+
+        [WebMethod]
         public static string GetContractsForMonth(int year, int month, string category)
         {
             int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);

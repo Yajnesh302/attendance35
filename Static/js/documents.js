@@ -2161,10 +2161,66 @@ p { margin: 0; padding: 0; }
 
                 if (!skipFilterChange && categorySel.value) {
                     onWagesFilterChange();
+                } else {
+                    checkWagesAttendanceCompleteness();
                 }
             }
 
+            function checkWagesAttendanceCompleteness() {
+                const yearEl = document.getElementById("wagesYear");
+                const monthEl = document.getElementById("wagesMonth");
+                if (!yearEl || !monthEl || yearEl.value === "" || monthEl.value === "") return;
+
+                const yearVal = parseInt(yearEl.value);
+                const monthVal = parseInt(monthEl.value);
+                const catVal = document.getElementById("wagesCategory") ? document.getElementById("wagesCategory").value : "";
+                const contractSel = document.getElementById("wagesContract");
+                const cpId = (contractSel && contractSel.value && contractSel.value !== "") ? parseInt(contractSel.value) : null;
+
+                fetch('Documents.aspx/CheckAttendanceCompleteness', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year: yearVal, month: monthVal, category: catVal, contractPeriodId: cpId })
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        const data = JSON.parse(res.d || "{}");
+                        const warnEl = document.getElementById("wagesAttendanceWarning");
+                        if (!warnEl) return;
+
+                        if (data.HasIncomplete) {
+                            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                            const monthName = months[monthVal] || "";
+                            document.getElementById("wagesWarningTitle").textContent = `Attendance Warning: Incomplete Records for ${monthName} ${yearVal}`;
+
+                            let html = '<ul style="margin: 0; padding-left: 20px; list-style-type: disc;">';
+                            if (data.MissingCount > 0) {
+                                const eg = (data.MissingExamples && data.MissingExamples.length) ? ` <span style="font-size:0.8rem; color:#92400e;">(e.g. ${data.MissingExamples.join(', ')})</span>` : '';
+                                html += `<li><strong>${data.MissingCount} day(s)</strong> have no attendance entered${eg}.</li>`;
+                            }
+                            if (data.UnspecifiedZeroCount > 0) {
+                                const eg = (data.UnspecifiedZeroExamples && data.UnspecifiedZeroExamples.length) ? ` <span style="font-size:0.8rem; color:#92400e;">(e.g. ${data.UnspecifiedZeroExamples.join(', ')})</span>` : '';
+                                html += `<li><strong>${data.UnspecifiedZeroCount} absent (0) day(s)</strong> have neither Paid nor Unpaid specified${eg}.</li>`;
+                            }
+                            if (data.PendingPairingCount > 0) {
+                                const eg = (data.PendingPairingExamples && data.PendingPairingExamples.length) ? ` <span style="font-size:0.8rem; color:#92400e;">(e.g. ${data.PendingPairingExamples.join(', ')})</span>` : '';
+                                html += `<li><strong>${data.PendingPairingCount} half-day pairing(s)</strong> are pending classification (not marked as Paired Paid or Paired Unpaid)${eg}.</li>`;
+                            }
+                            html += '</ul>';
+                            document.getElementById("wagesWarningDetails").innerHTML = html;
+                            warnEl.style.display = "block";
+                        } else {
+                            warnEl.style.display = "none";
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error checking wages attendance completeness:", err);
+                    });
+            }
+
             function onWagesFilterChange(selectedContractId) {
+                checkWagesAttendanceCompleteness();
+
                 const yearVal = parseInt(document.getElementById("wagesYear").value);
                 const monthVal = parseInt(document.getElementById("wagesMonth").value);
                 const catVal = document.getElementById("wagesCategory").value;
@@ -2211,6 +2267,7 @@ p { margin: 0; padding: 0; }
             }
 
             function onWagesContractChange() {
+                checkWagesAttendanceCompleteness();
                 const contractSel = document.getElementById("wagesContract");
                 const selectedId = parseInt(contractSel.value);
                 const contract = wagesContractsList.find(c => c.Id === selectedId);

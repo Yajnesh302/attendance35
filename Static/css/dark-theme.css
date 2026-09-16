@@ -1985,6 +1985,275 @@ html.theme-dark .input-group input.form-control:focus {
     border-color: #818cf8 !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   REPORTS HUB (Reports.aspx) DARK MODE OVERRIDES
+   ═══════════════════════════════════════════════════════════════════ */
+html.theme-dark .reports-page-title {
+    color: #f1f5f9 !important;
+}
+
+html.theme-dark .reports-page-sub {
+    color: #94a3b8 !important;
+}
+
+html.theme-dark .btn-back-dash {
+    background: #1e2233 !important;
+    color: #cbd5e1 !important;
+    border-color: #3d4460 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.theme-dark .btn-back-dash:hover {
+    background: #252a3a !important;
+    color: #818cf8 !important;
+    border-color: #6366f1 !important;
+    transform: translateX(-2px);
+}
+
+html.theme-dark .report-hub-card {
+    background: #1a1d27 !important;
+    border-color: #2d3348 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.theme-dark .report-hub-card:hover {
+    background: #1e2233 !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(99, 102, 241, 0.2) !important;
+    transform: translateY(-5px);
+}
+
+html.theme-dark .icon-wrap-amber {
+    background: rgba(245, 158, 11, 0.16) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+html.theme-dark .report-card-title {
+    color: #f1f5f9 !important;
+}
+
+html.theme-dark .report-card-subtitle {
+    color: #f59e0b !important;
+}
+
+html.theme-dark .report-card-desc {
+    color: #94a3b8 !important;
+}
+
+html.theme-dark .report-card-footer-action {
+    border-top-color: #2d3348 !important;
+    color: #818cf8 !important;
+}
+
+html.theme-dark .report-hub-card:hover .report-card-footer-action {
+    color: #a5b4fc !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MONTHLY ATTENDANCE REPORT (MonthlyAttendanceReport.aspx) DARK MODE
+   ═══════════════════════════════════════════════════════════════════ */
+@media screen {
+    html.theme-dark .report-toolbar-card {
+        background: #1a1d27 !important;
+        border-color: #2d3348 !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    html.theme-dark .btn-action-secondary {
+        background: #252a3a !important;
+        color: #cbd5e1 !important;
+        border-color: #3d4460 !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    html.theme-dark .btn-action-secondary:hover {
+        background: #2e354a !important;
+        color: #818cf8 !important;
+        border-color: #6366f1 !important;
+    }
+
+    html.theme-dark .filter-label {
+        color: #94a3b8 !important;
+    }
+
+    html.theme-dark .form-select-custom,
+    html.theme-dark .form-input-custom {
+        background-color: #161922 !important;
+        color: #e2e8f0 !important;
+        border-color: #3d4460 !important;
+    }
+
+    html.theme-dark .form-select-custom:focus,
+    html.theme-dark .form-input-custom:focus {
+        background-color: #1e2233 !important;
+        border-color: #818cf8 !important;
+        box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25) !important;
+    }
+
+    html.theme-dark .form-select-custom option {
+        background-color: #161922 !important;
+        color: #e2e8f0 !important;
+    }
+
+    html.theme-dark .btn-date-clear {
+        background: #252a3a !important;
+        border-color: #3d4460 !important;
+        color: #94a3b8 !important;
+    }
+
+    html.theme-dark .btn-date-clear:hover {
+        background: #2e354a !important;
+        border-color: #ef4444 !important;
+        color: #f87171 !important;
+    }
+
+    html.theme-dark .btn-date-clear i {
+        color: #94a3b8 !important;
+    }
+
+    html.theme-dark .btn-date-clear:hover i {
+        color: #f87171 !important;
+    }
+
+    html.theme-dark .btn-report-refresh {
+        background: #252a3a !important;
+        border-color: #3d4460 !important;
+        color: #cbd5e1 !important;
+    }
+
+    html.theme-dark .btn-report-refresh:hover {
+        background: #2e354a !important;
+        border-color: #6366f1 !important;
+        color: #818cf8 !important;
+    }
+
+    html.theme-dark .col-dropdown-menu {
+        background: #1a1d27 !important;
+        border-color: #2d3348 !important;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.55) !important;
+    }
+
+    html.theme-dark .col-dropdown-title {
+        color: #f1f5f9 !important;
+    }
+
+    html.theme-dark .col-dropdown-menu .border-bottom {
+        border-color: #2d3348 !important;
+    }
+
+    html.theme-dark .col-item-label {
+        color: #cbd5e1 !important;
+    }
+
+    html.theme-dark .col-item-label:hover {
+        background: #252a3a !important;
+        color: #818cf8 !important;
+    }
+
+    html.theme-dark .col-item-label input[type="checkbox"] {
+        accent-color: #6366f1;
+    }
+
+    html.theme-dark .report-notice-banner {
+        background: rgba(37, 99, 235, 0.14) !important;
+        border-color: rgba(59, 130, 246, 0.3) !important;
+        border-left-color: #60a5fa !important;
+        color: #93c5fd !important;
+    }
+
+    html.theme-dark .report-notice-icon {
+        color: #60a5fa !important;
+    }
+
+    html.theme-dark .report-notice-text strong {
+        color: #bfdbfe !important;
+    }
+
+    html.theme-dark .report-notice-text em {
+        color: #93c5fd !important;
+    }
+
+    /* Landscape Sheet View in Dark Mode */
+    html.theme-dark .landscape-viewport {
+        background: transparent;
+    }
+
+    html.theme-dark .landscape-sheet {
+        background: #1a1d27 !important;
+        border-color: #2d3348 !important;
+        color: #e2e8f0 !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    html.theme-dark .rep-top-line1,
+    html.theme-dark .rep-top-line2,
+    html.theme-dark .rep-directorate-line,
+    html.theme-dark .rep-cert-paragraph,
+    html.theme-dark .rep-signatures-wrap,
+    html.theme-dark .rep-to-block,
+    html.theme-dark .rep-sig-left,
+    html.theme-dark .rep-sig-right {
+        color: #e2e8f0 !important;
+    }
+
+    html.theme-dark .rep-table {
+        border-color: #3d4460 !important;
+    }
+
+    html.theme-dark .rep-table th {
+        background-color: #1e2233 !important;
+        color: #f1f5f9 !important;
+        border-color: #3d4460 !important;
+    }
+
+    html.theme-dark .rep-table th #lblPrevMonSalary,
+    html.theme-dark .rep-table th #lblPrevMonEpf {
+        color: #94a3b8 !important;
+    }
+
+    html.theme-dark .rep-table th i.text-primary {
+        color: #818cf8 !important;
+    }
+
+    html.theme-dark .rep-table td {
+        background-color: #1a1d27 !important;
+        color: #cbd5e1 !important;
+        border-color: #2d3348 !important;
+    }
+
+    html.theme-dark .rep-table tr:hover td {
+        background-color: #202534 !important;
+    }
+
+    html.theme-dark .rep-table td.col-cat,
+    html.theme-dark .rep-table td.col-manpower {
+        background-color: #161922 !important;
+        color: #f1f5f9 !important;
+    }
+
+    html.theme-dark .cell-inline-date {
+        background-color: #161922 !important;
+        border-color: #3d4460 !important;
+        color: #e2e8f0 !important;
+    }
+
+    html.theme-dark .cell-inline-date:hover {
+        background-color: #1e2233 !important;
+        border-color: #818cf8 !important;
+    }
+
+    html.theme-dark .cell-inline-date:focus {
+        background-color: #1e2233 !important;
+        border-color: #818cf8 !important;
+        box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.25) !important;
+    }
+
+    html.theme-dark input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(0.85);
+    }
+}
+
 
 
 

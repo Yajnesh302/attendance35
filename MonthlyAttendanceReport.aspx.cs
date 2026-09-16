@@ -4,6 +4,7 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Script.Serialization;
 using System.Web.Services;
@@ -20,6 +21,14 @@ namespace AttendanceApp
             if (!User.Identity.IsAuthenticated || Session["PCNO"] == null)
             {
                 Response.Redirect("Login.aspx");
+                return;
+            }
+
+            string roleMode = Session["RoleMode"]?.ToString() ?? "";
+            int role = Convert.ToInt32(Session["Role"] ?? 0);
+            if (roleMode == "SubUser" || role == 6)
+            {
+                Response.Redirect("Dashboard.aspx");
                 return;
             }
 
@@ -89,10 +98,17 @@ namespace AttendanceApp
         {
             if (HttpContext.Current.Session["PCNO"] == null) return "{\"status\":\"error\",\"message\":\"Session expired\"}";
 
+            string roleMode = HttpContext.Current.Session["RoleMode"]?.ToString() ?? "";
+            int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+            if (roleMode == "SubUser" || role == 6)
+            {
+                return "{\"status\":\"error\",\"message\":\"Access denied. Sub Users cannot access this report.\"}";
+            }
+
             try
             {
                 string pcno = HttpContext.Current.Session["PCNO"].ToString();
-                int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+                bool isPoc = (role != 1 && role != 4);
 
                 DataTable dtTiers = DBHelper.GetVisibleTiersDataTable(pcno, role);
                 var categoryList = new List<object>();
@@ -152,12 +168,19 @@ namespace AttendanceApp
                         manpowerDesc = "DEO";
                     }
 
+                    // POC View Restriction for this tier/category (identical to Ledger page)
+                    PocViewRestrictionInfo viewInfo = isPoc ? DBHelper.GetPocViewRestriction(pcno, "Ledger", tierId.ToString()) : null;
+
                     categoryList.Add(new
                     {
                         TierId = tierId,
                         DisplayName = disp,
                         CleanName = cleanTier,
-                        ManpowerDesc = manpowerDesc
+                        ManpowerDesc = manpowerDesc,
+                        IsRestricted = viewInfo != null && viewInfo.IsRestricted,
+                        MinAllowedDate = (viewInfo != null && viewInfo.MinAllowedDate.HasValue) ? viewInfo.MinAllowedDate.Value.ToString("yyyy-MM-dd") : null,
+                        MaxAllowedDate = (viewInfo != null && viewInfo.MaxAllowedDate.HasValue) ? viewInfo.MaxAllowedDate.Value.ToString("yyyy-MM-dd") : null,
+                        RestrictionDesc = viewInfo != null ? viewInfo.Description : ""
                     });
                 }
 
@@ -167,6 +190,7 @@ namespace AttendanceApp
                 return new JavaScriptSerializer().Serialize(new
                 {
                     status = "success",
+                    IsPoc = isPoc,
                     CurrentYear = now.Year,
                     CurrentMonth = now.Month, // 1-indexed (1 = Jan, 12 = Dec)
                     Categories = categoryList
@@ -185,6 +209,17 @@ namespace AttendanceApp
 
             try
             {
+                int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+                if (role != 1 && role != 4)
+                {
+                    string pcno = HttpContext.Current.Session["PCNO"].ToString();
+                    var viewInfo = DBHelper.GetPocViewRestriction(pcno, "Ledger", tierId.ToString());
+                    if (viewInfo != null && viewInfo.IsRestricted && !viewInfo.IsMonthAllowed(year, month))
+                    {
+                        return "[]";
+                    }
+                }
+
                 DateTime firstDay = new DateTime(year, month, 1);
                 DateTime lastDay = firstDay.AddMonths(1).AddDays(-1);
 
@@ -231,10 +266,31 @@ namespace AttendanceApp
         {
             if (HttpContext.Current.Session["PCNO"] == null) return "{\"status\":\"error\",\"message\":\"Session expired\"}";
 
+            string roleMode = HttpContext.Current.Session["RoleMode"]?.ToString() ?? "";
+            int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+            if (roleMode == "SubUser" || role == 6)
+            {
+                return "{\"status\":\"error\",\"message\":\"Access denied. Sub Users cannot access this report.\"}";
+            }
+
             try
             {
                 string pcno = HttpContext.Current.Session["PCNO"].ToString();
-                int role = Convert.ToInt32(HttpContext.Current.Session["Role"] ?? 0);
+
+                // POC Month View Restriction Check (identical to Ledger page restriction)
+                if (role != 1 && role != 4)
+                {
+                    var viewInfo = DBHelper.GetPocViewRestriction(pcno, "Ledger", tierId.ToString());
+                    if (viewInfo != null && viewInfo.IsRestricted && !viewInfo.IsMonthAllowed(year, month))
+                    {
+                        string mName = new DateTime(year, month, 1).ToString("MMMM yyyy");
+                        return new JavaScriptSerializer().Serialize(new
+                        {
+                            status = "error",
+                            message = $"Viewing report for {mName} is restricted by your administrator ({viewInfo.Description})."
+                        });
+                    }
+                }
 
                 DateTime monthStart = new DateTime(year, month, 1);
                 DateTime monthEnd = monthStart.AddMonths(1).AddDays(-1);
@@ -274,50 +330,7 @@ namespace AttendanceApp
                 string bottomFontSize = tplDict.ContainsKey("PocRepBottomFontSize") ? tplDict["PocRepBottomFontSize"] : "11";
                 string bottomAlign = tplDict.ContainsKey("PocRepBottomAlign") ? tplDict["PocRepBottomAlign"] : "left";
 
-                // 3. Resolve Vendor Name
-                string vendorName = "VISHAL MANPOWER & SECURITY CONSULTANTS";
-                if (contractPeriodId > 0)
-                {
-                    string vSql = "SELECT v.Name FROM ContractPeriods cp JOIN Vendors v ON cp.VendorId = v.Id WHERE cp.Id = :CId";
-                    object vObj = DBHelper.ExecuteScalar(DBHelper.GetAttendanceDBConnection(), vSql, new OracleParameter("CId", contractPeriodId));
-                    if (vObj != null && vObj != DBNull.Value) vendorName = vObj.ToString();
-                }
-                else
-                {
-                    string vSql = @"
-                        SELECT v.Name FROM ContractPeriods cp 
-                        JOIN Vendors v ON cp.VendorId = v.Id 
-                        WHERE cp.TierId = :TierId 
-                          AND cp.StartDate <= :LastDay 
-                          AND (cp.EndDate IS NULL OR cp.EndDate >= :FirstDay)
-                        ORDER BY CASE WHEN cp.Status = 'Active' THEN 0 ELSE 1 END, cp.StartDate DESC";
-                    object vObj = DBHelper.ExecuteScalar(DBHelper.GetAttendanceDBConnection(), vSql,
-                        new OracleParameter("TierId", tierId),
-                        new OracleParameter("LastDay", monthEnd),
-                        new OracleParameter("FirstDay", monthStart));
-                    if (vObj != null && vObj != DBNull.Value) vendorName = vObj.ToString();
-                }
-
-                // Format Top Line 1 & Line 2
-                string line1Text = topLine1Tpl.Replace("{VendorName}", vendorName);
-                if (!line1Text.StartsWith("M/s", StringComparison.OrdinalIgnoreCase) && !line1Text.StartsWith("M/S", StringComparison.OrdinalIgnoreCase))
-                {
-                    line1Text = "M/s " + line1Text;
-                }
-
-                string line2Text = topLine2Tpl
-                    .Replace("{Month:upper}", curMonthNameUpper)
-                    .Replace("{Month}", monthStart.ToString("MMM", CultureInfo.InvariantCulture))
-                    .Replace("{MonthFull}", monthStart.ToString("MMMM", CultureInfo.InvariantCulture))
-                    .Replace("{Year}", year.ToString());
-
-                string signaturesText = signaturesTpl
-                    .Replace("{Directorate}", directorateStr)
-                    .Replace("{directorate}", directorateStr)
-                    .Replace("{Division}", directorateStr)
-                    .Replace("{division}", directorateStr);
-
-                // 4. Resolve Category & Manpower Description
+                // 3. Resolve Category & Manpower Description
                 string catName = "Skilled";
                 string manpowerDesc = "DEO";
                 string catQuery = "SELECT TierName, RoleLabel FROM Tiers WHERE Id = :TierId";
@@ -365,6 +378,106 @@ namespace AttendanceApp
                         manpowerDesc = "DEO";
                     }
                 }
+
+                // 4. Resolve Vendor & Contract Details
+                string vendorName = "VISHAL MANPOWER & SECURITY CONSULTANTS";
+                string vendorAddress = "";
+                string contractNo = "";
+                string contractDate = "";
+                string datedOn = "";
+
+                string vSql = (contractPeriodId > 0)
+                    ? @"SELECT v.Name AS VendorName, v.Address AS VendorAddress, cp.GemId, cp.StartDate, cp.EndDate, cp.DatedOn 
+                        FROM ContractPeriods cp 
+                        JOIN Vendors v ON cp.VendorId = v.Id 
+                        WHERE cp.Id = :CId"
+                    : @"SELECT v.Name AS VendorName, v.Address AS VendorAddress, cp.GemId, cp.StartDate, cp.EndDate, cp.DatedOn 
+                        FROM ContractPeriods cp 
+                        JOIN Vendors v ON cp.VendorId = v.Id 
+                        WHERE cp.TierId = :TierId 
+                          AND cp.StartDate <= :LastDay 
+                          AND (cp.EndDate IS NULL OR cp.EndDate >= :FirstDay)
+                        ORDER BY CASE WHEN cp.Status = 'Active' THEN 0 ELSE 1 END, cp.StartDate DESC";
+
+                DataTable dtContract = (contractPeriodId > 0)
+                    ? DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), vSql, new OracleParameter("CId", contractPeriodId))
+                    : DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), vSql,
+                        new OracleParameter("TierId", tierId),
+                        new OracleParameter("LastDay", monthEnd),
+                        new OracleParameter("FirstDay", monthStart));
+
+                if (dtContract != null && dtContract.Rows.Count > 0)
+                {
+                    DataRow cr = dtContract.Rows[0];
+                    if (cr["VendorName"] != DBNull.Value && !string.IsNullOrWhiteSpace(cr["VendorName"].ToString()))
+                    {
+                        vendorName = cr["VendorName"].ToString().Trim();
+                    }
+                    if (cr["VendorAddress"] != DBNull.Value)
+                    {
+                        vendorAddress = cr["VendorAddress"].ToString().Trim();
+                    }
+                    if (cr["GemId"] != DBNull.Value)
+                    {
+                        contractNo = cr["GemId"].ToString().Trim();
+                    }
+                    if (cr["StartDate"] != DBNull.Value)
+                    {
+                        contractDate = Convert.ToDateTime(cr["StartDate"]).ToString("dd-MMM-yyyy");
+                    }
+                    if (cr["DatedOn"] != DBNull.Value)
+                    {
+                        datedOn = Convert.ToDateTime(cr["DatedOn"]).ToString("dd-MMM-yyyy");
+                    }
+                }
+
+                // 5. Build Global Placeholder Context
+                Dictionary<string, string> ctx = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "vendorname", vendorName },
+                    { "vendoraddress", vendorAddress },
+                    { "contractno", contractNo },
+                    { "gemid", contractNo },
+                    { "contractdate", contractDate },
+                    { "datedon", datedOn },
+                    { "startdate", monthStart.ToString("dd-MMM-yyyy") },
+                    { "enddate", monthEnd.ToString("dd-MMM-yyyy") },
+                    { "period", $"{monthStart:dd-MMM-yyyy} to {monthEnd:dd-MMM-yyyy}" },
+                    { "month", monthStart.ToString("MMM", CultureInfo.InvariantCulture) },
+                    { "monthfull", monthStart.ToString("MMMM", CultureInfo.InvariantCulture) },
+                    { "monthname", monthStart.ToString("MMMM", CultureInfo.InvariantCulture) },
+                    { "curmonth", monthStart.ToString("MMM", CultureInfo.InvariantCulture) },
+                    { "curmonthfull", monthStart.ToString("MMMM", CultureInfo.InvariantCulture) },
+                    { "prevmonth", prevMonthDate.ToString("MMM", CultureInfo.InvariantCulture) },
+                    { "prevmonthname", prevMonthDate.ToString("MMMM", CultureInfo.InvariantCulture) },
+                    { "prevmonthfull", prevMonthDate.ToString("MMMM", CultureInfo.InvariantCulture) },
+                    { "year", year.ToString() },
+                    { "curyear", year.ToString() },
+                    { "category", catName },
+                    { "tiername", catName },
+                    { "categorydesc", manpowerDesc },
+                    { "designation", manpowerDesc },
+                    { "role", manpowerDesc },
+                    { "manpower", manpowerDesc },
+                    { "manpowerdesc", manpowerDesc },
+                    { "directorate", directorateStr },
+                    { "division", directorateStr },
+                    { "date", DateTime.Today.ToString("dd-MMM-yyyy") },
+                    { "today", DateTime.Today.ToString("dd-MMM-yyyy") },
+                    { "currentdate", DateTime.Today.ToString("dd-MMM-yyyy") }
+                };
+
+                // Format Top Line 1 & Line 2, Certification Paragraph, and Signatures & Recipient Block
+                string line1Text = ResolveTemplatePlaceholders(topLine1Tpl, ctx, year, month);
+                line1Text = Regex.Replace(line1Text, @"^(M/s\.?|M/S\.?)\s+(M/s\.?|M/S\.?)\s+", "M/s ", RegexOptions.IgnoreCase);
+                if (!line1Text.StartsWith("M/s", StringComparison.OrdinalIgnoreCase) && !line1Text.StartsWith("M/S", StringComparison.OrdinalIgnoreCase))
+                {
+                    line1Text = "M/s " + line1Text;
+                }
+
+                string line2Text = ResolveTemplatePlaceholders(topLine2Tpl, ctx, year, month);
+                certParagraph = ResolveTemplatePlaceholders(certParagraph, ctx, year, month);
+                string signaturesText = ResolveTemplatePlaceholders(signaturesTpl, ctx, year, month);
 
                 // 5. Query Employees under this Category and POC's allowed divisions
                 string empQuery = @"
@@ -414,6 +527,7 @@ namespace AttendanceApp
                     new OracleParameter("Month", dbMonth));
 
                 Dictionary<string, Dictionary<int, DataRow>> attByEmp = new Dictionary<string, Dictionary<int, DataRow>>(StringComparer.OrdinalIgnoreCase);
+                HashSet<int> monthHolidays = new HashSet<int>();
                 if (dtAtt != null)
                 {
                     foreach (DataRow dr in dtAtt.Rows)
@@ -422,36 +536,14 @@ namespace AttendanceApp
                         int d = Convert.ToInt32(dr["Day"]);
                         if (!attByEmp.ContainsKey(eid)) attByEmp[eid] = new Dictionary<int, DataRow>();
                         attByEmp[eid][d] = dr;
-                    }
-                }
 
-                // Also overlay AttendanceDraft for any pending draft cells not yet finalized in Attendance
-                try
-                {
-                    string draftSql = @"
-                        SELECT EmpID, Day, StatusValue, IsHoliday, LeaveType, AutoSat, Remarks 
-                        FROM AttendanceDraft 
-                        WHERE Year = :Year AND Month = :Month";
-                    DataTable dtDraft = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), draftSql,
-                        new OracleParameter("Year", year),
-                        new OracleParameter("Month", dbMonth));
-
-                    if (dtDraft != null)
-                    {
-                        foreach (DataRow dr in dtDraft.Rows)
+                        int isH = dr["IsHoliday"] != DBNull.Value ? Convert.ToInt32(dr["IsHoliday"]) : 0;
+                        if (isH == 1)
                         {
-                            string eid = dr["EmpID"].ToString();
-                            int d = Convert.ToInt32(dr["Day"]);
-                            if (!attByEmp.ContainsKey(eid)) attByEmp[eid] = new Dictionary<int, DataRow>();
-                            // If live record doesn't already have status, or if draft provides it:
-                            if (!attByEmp[eid].ContainsKey(d))
-                            {
-                                attByEmp[eid][d] = dr;
-                            }
+                            monthHolidays.Add(d);
                         }
                     }
                 }
-                catch (Exception) { /* AttendanceDraft table safety */ }
 
                 foreach (DataRow row in dtEmp.Rows)
                 {
@@ -496,6 +588,12 @@ namespace AttendanceApp
                                 continue;
                             }
 
+                            // Declared Office Holiday: not counted as attended days, and not counted as absent/leave
+                            if (monthHolidays.Contains(day))
+                            {
+                                continue;
+                            }
+
                             // Check stint eligibility
                             if (joinDate.HasValue && date.Date < joinDate.Value.Date)
                             {
@@ -511,15 +609,14 @@ namespace AttendanceApp
                             {
                                 DataRow ar = dayMap[day];
                                 int isHol = ar["IsHoliday"] != DBNull.Value ? Convert.ToInt32(ar["IsHoliday"]) : 0;
-                                string ltype = ar["LeaveType"] != DBNull.Value ? ar["LeaveType"].ToString().Trim() : "";
-                                double? val = ar["StatusValue"] != DBNull.Value ? (double?)Convert.ToDouble(ar["StatusValue"]) : null;
-
                                 if (isHol == 1)
                                 {
-                                    // Declared Office Holiday: counted as present/attended (office closed, not absent)
-                                    presentDays += 1.0;
+                                    // Holiday: not counted as attended day
                                     continue;
                                 }
+
+                                string ltype = ar["LeaveType"] != DBNull.Value ? ar["LeaveType"].ToString().Trim() : "";
+                                double? val = ar["StatusValue"] != DBNull.Value ? (double?)Convert.ToDouble(ar["StatusValue"]) : null;
 
                                 // Half day detection:
                                 // StatusValue is 0.5 OR LeaveType is Carried / Pending Pairing / Paired Paid / Paired Unpaid / contains Half
@@ -619,6 +716,118 @@ namespace AttendanceApp
             {
                 return new JavaScriptSerializer().Serialize(new { status = "error", message = ex.Message });
             }
+        }
+
+        private static string ResolveTemplatePlaceholders(string template, Dictionary<string, string> ctx, int year, int month)
+        {
+            if (string.IsNullOrEmpty(template)) return "";
+
+            string result = Regex.Replace(template, @"\{\s*([a-zA-Z0-9_\s]+?)(?:\s*([+-])\s*(\d+))?(?::([^}]+))?\s*\}", m =>
+            {
+                string rawKey = m.Groups[1].Value.Trim();
+                string normKey = rawKey.ToLowerInvariant().Replace(" ", "").Replace("_", "").Replace("-", "");
+
+                int offset = 0;
+                if (m.Groups[2].Success && m.Groups[3].Success)
+                {
+                    offset = int.Parse(m.Groups[2].Value + m.Groups[3].Value);
+                }
+
+                string modifier = m.Groups[4].Success ? m.Groups[4].Value.Trim().ToLowerInvariant() : "";
+
+                int modOffset;
+                if (!string.IsNullOrEmpty(modifier) && int.TryParse(modifier, out modOffset))
+                {
+                    offset = modOffset;
+                    modifier = "";
+                }
+
+                string val = null;
+
+                // Month arithmetic & resolution
+                if (normKey == "month" || normKey == "monthshort" || normKey == "curmonth")
+                {
+                    DateTime targetMonth = new DateTime(year, month, 1).AddMonths(offset);
+                    val = targetMonth.ToString("MMM", CultureInfo.InvariantCulture);
+                }
+                else if (normKey == "monthfull" || normKey == "monthname" || normKey == "curmonthfull")
+                {
+                    DateTime targetMonth = new DateTime(year, month, 1).AddMonths(offset);
+                    val = targetMonth.ToString("MMMM", CultureInfo.InvariantCulture);
+                }
+                else if (normKey == "prevmonth" || normKey == "prevmonthshort")
+                {
+                    DateTime targetMonth = new DateTime(year, month, 1).AddMonths(-1 + offset);
+                    val = targetMonth.ToString("MMM", CultureInfo.InvariantCulture);
+                }
+                else if (normKey == "prevmonthname" || normKey == "prevmonthfull")
+                {
+                    DateTime targetMonth = new DateTime(year, month, 1).AddMonths(-1 + offset);
+                    val = targetMonth.ToString("MMMM", CultureInfo.InvariantCulture);
+                }
+                else if (normKey == "year" || normKey == "curyear")
+                {
+                    val = (year + offset).ToString();
+                }
+                else if (normKey == "prevyear")
+                {
+                    val = (year - 1 + offset).ToString();
+                }
+                else
+                {
+                    // Check ctx
+                    if (ctx.ContainsKey(normKey))
+                    {
+                        val = ctx[normKey];
+                    }
+                    else
+                    {
+                        foreach (var kvp in ctx)
+                        {
+                            string k = kvp.Key.ToLowerInvariant().Replace(" ", "").Replace("_", "").Replace("-", "");
+                            if (k == normKey)
+                            {
+                                val = kvp.Value;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (val == null)
+                {
+                    return m.Value; // Unknown placeholder, leave intact
+                }
+
+                // Apply modifiers
+                if (!string.IsNullOrEmpty(modifier))
+                {
+                    if (modifier == "upper" || modifier == "caps" || modifier == "uppercase")
+                    {
+                        val = val.ToUpperInvariant();
+                    }
+                    else if (modifier == "lower" || modifier == "lowercase")
+                    {
+                        val = val.ToLowerInvariant();
+                    }
+                    else if (modifier == "title" || modifier == "capitalize")
+                    {
+                        val = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(val.ToLowerInvariant());
+                    }
+                }
+                else if (rawKey.Length > 2 && rawKey == rawKey.ToUpperInvariant())
+                {
+                    // If written in all uppercase like {VENDORNAME}, {MONTH}, {CATEGORY}
+                    val = val.ToUpperInvariant();
+                }
+
+                return val;
+            }, RegexOptions.IgnoreCase);
+
+            // Clean up any accidental duplicate "M/s M/s" or "M/s M/S"
+            result = Regex.Replace(result, @"\b(M/s\.?|M/S\.?)\s+(M/s\.?|M/S\.?)\s+", "M/s ", RegexOptions.IgnoreCase);
+
+            return result;
         }
 
         private static string BuildRemarksString(List<int> absentDates, List<int> halfDayDates, DateTime? joinDate, DateTime? resignDate, int year, int month)

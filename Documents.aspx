@@ -1633,6 +1633,24 @@
                 <h5 class="font-weight-bold text-dark mb-3"><i class="fas fa-sliders-h mr-2 text-primary"></i>Wages
                     Calculation Configuration</h5>
 
+                <!-- Attendance Completeness Warning Banner -->
+                <div id="wagesAttendanceWarning" class="alert alert-warning mb-3" style="display: none; border-left: 5px solid #f59e0b; background-color: #fffbeb; border-color: #fde68a; color: #92400e; padding: 14px 18px; border-radius: 8px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.08);">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 1.4rem; color: #d97706; margin-top: 2px; flex-shrink: 0;"></i>
+                        <div style="flex-grow: 1;">
+                            <div style="font-weight: 700; font-size: 0.95rem; color: #92400e; margin-bottom: 4px;" id="wagesWarningTitle">
+                                Attendance Incompleteness Warning
+                            </div>
+                            <div id="wagesWarningDetails" style="font-size: 0.88rem; line-height: 1.5; color: #78350f;">
+                            </div>
+                            <div style="margin-top: 6px; font-size: 0.8rem; color: #b45309; font-style: italic;">
+                                Please review attendance in the Attendance page before finalizing wages.
+                            </div>
+                        </div>
+                        <button type="button" onclick="document.getElementById('wagesAttendanceWarning').style.display='none'" style="background: none; border: none; color: #92400e; cursor: pointer; font-size: 1.25rem; line-height: 1; padding: 0 4px;" title="Dismiss Warning">&times;</button>
+                    </div>
+                </div>
+
                 <div class="filter-grid">
                     <div>
                         <label class="form-label-bold">Year</label>
@@ -2259,12 +2277,10 @@
                             <div>
                                 <label class="form-label-bold">Line 1 Template (Vendor Name)</label>
                                 <textarea id="txtPocRepTopLine1" class="form-control-custom" style="height: 60px; min-height: 60px; resize: vertical;" placeholder="M/s {VendorName}">M/s {VendorName}</textarea>
-                                <small style="color: #64748b; font-size: 0.75rem;">Placeholders: <code>{VendorName}</code></small>
                             </div>
                             <div>
                                 <label class="form-label-bold">Line 2 Template (Recommendation Header)</label>
                                 <textarea id="txtPocRepTopLine2" class="form-control-custom" style="height: 60px; min-height: 60px; resize: vertical;" placeholder="MONTHLY REPORT AND RECOMMENDATION ON HIRING OF MANPOWER SERVICES FOR MAKING PAYMENT FOR THE MONTH OF {Month:upper} - {Year}">MONTHLY REPORT AND RECOMMENDATION ON HIRING OF MANPOWER SERVICES FOR MAKING PAYMENT FOR THE MONTH OF {Month:upper} - {Year}</textarea>
-                                <small style="color: #64748b; font-size: 0.75rem;">Placeholders: <code>{Month}</code>, <code>{Month:upper}</code>, <code>{Year}</code></small>
                             </div>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
@@ -2322,7 +2338,6 @@
 Signature of Group Director
 To
     {Directorate}</textarea>
-                                <small style="color: #64748b; font-size: 0.75rem;">Placeholders: <code>{Directorate}</code></small>
                             </div>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">

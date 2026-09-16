@@ -11,35 +11,160 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 16px;
-            padding: 18px 22px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+            padding: 20px 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
             margin-bottom: 24px;
         }
 
-        .filter-row {
+        /* Toolbar Header: Title & Main Actions */
+        .toolbar-header-row {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
             flex-wrap: wrap;
-            align-items: flex-end;
+            gap: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 16px;
+        }
+
+        .toolbar-title-wrap {
+            display: flex;
+            align-items: center;
             gap: 14px;
         }
 
-        .filter-group {
+        .btn-action-back {
+            height: 38px;
+            padding: 0 16px;
+            background: #f8fafc;
+            color: #475569 !important;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+        }
+
+        .btn-action-back:hover {
+            background: #f1f5f9;
+            color: #0f172a !important;
+            border-color: #cbd5e1;
+            transform: translateX(-2px);
+        }
+
+        .toolbar-title-content {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 2px;
+        }
+
+        .toolbar-title {
+            margin: 0;
+            font-size: 1.12rem;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+        }
+
+        .toolbar-subtitle {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .toolbar-actions-wrap {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-toolbar-btn {
+            height: 38px;
+            padding: 0 15px;
+            background: #ffffff;
+            color: #334155 !important;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none !important;
+        }
+
+        .btn-toolbar-btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a !important;
+        }
+
+        .toolbar-btn-divider {
+            width: 1px;
+            height: 24px;
+            background: #e2e8f0;
+            margin: 0 4px;
+        }
+
+        /* Primary Filters Grid - Generous, well-spaced layout */
+        .filter-main-grid {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .filter-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-cell-year {
+            width: 110px;
+            flex-shrink: 0;
+        }
+
+        .filter-cell-month {
+            width: 160px;
+            flex-shrink: 0;
+        }
+
+        .filter-cell-cat {
+            flex: 1 1 240px;
+            min-width: 210px;
+        }
+
+        .filter-cell-contract {
+            flex: 2 1 380px;
+            min-width: 290px;
         }
 
         .filter-label {
-            font-size: 0.78rem;
-            font-weight: 800;
+            font-size: 0.8rem;
+            font-weight: 700;
             color: #334155;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.2px;
+            margin: 0;
         }
 
         .form-select-custom, .form-input-custom {
-            height: 38px;
-            border-radius: 8px;
+            height: 40px;
+            border-radius: 9px;
             border: 1.5px solid #cbd5e1;
             padding: 0 12px;
             font-size: 0.88rem;
@@ -48,11 +173,18 @@
             background-color: #ffffff;
             transition: all 0.15s ease;
             outline: none;
+            width: 100%;
         }
 
         .form-select-custom:focus, .form-input-custom:focus {
             border-color: #6366f1;
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .form-select-custom option:disabled {
+            color: #94a3b8 !important;
+            background-color: #f1f5f9 !important;
+            cursor: not-allowed !important;
         }
 
         /* Action Buttons */
@@ -122,6 +254,233 @@
         .btn-action-secondary:hover {
             background: #e2e8f0;
             color: #0f172a !important;
+        }
+
+        /* Subpanel: Suggested Payment Dates & Notice */
+        .toolbar-subpanel {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .subpanel-dates-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .subpanel-badge-label {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .date-picker-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-picker-tag {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .date-input-unified {
+            display: inline-flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0 6px 0 10px;
+            height: 36px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+            transition: all 0.15s ease;
+        }
+
+        .date-input-unified:focus-within {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .date-input-unified input[type="date"] {
+            border: none !important;
+            outline: none !important;
+            background: transparent !important;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+            padding: 0 4px;
+            cursor: pointer;
+            height: 100%;
+        }
+
+        .btn-date-clear-inline {
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .btn-date-clear-inline:hover {
+            color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .subpanel-notice {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            color: #1e40af;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 3.5px solid #2563eb;
+            border-radius: 7px;
+            padding: 6px 12px;
+            line-height: 1.4;
+            max-width: 620px;
+        }
+
+        .subpanel-notice-icon {
+            font-size: 0.95rem;
+            color: #2563eb;
+            flex-shrink: 0;
+        }
+
+        .subpanel-notice-text strong {
+            color: #1e3a8a;
+        }
+
+        /* Dark Theme Overrides for Toolbar */
+        html.theme-dark .report-toolbar-card {
+            background: #151821 !important;
+            border-color: #2d3348 !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+        }
+
+        html.theme-dark .toolbar-header-row {
+            border-bottom-color: #252a3a !important;
+        }
+
+        html.theme-dark .btn-action-back {
+            background: #1e2233 !important;
+            border-color: #3d4460 !important;
+            color: #cbd5e1 !important;
+        }
+
+        html.theme-dark .btn-action-back:hover {
+            background: #252a3a !important;
+            color: #f1f5f9 !important;
+            border-color: #6366f1 !important;
+        }
+
+        html.theme-dark .toolbar-title {
+            color: #f1f5f9 !important;
+        }
+
+        html.theme-dark .toolbar-subtitle {
+            color: #94a3b8 !important;
+        }
+
+        html.theme-dark .btn-toolbar-btn {
+            background: #1e2233 !important;
+            border-color: #3d4460 !important;
+            color: #cbd5e1 !important;
+        }
+
+        html.theme-dark .btn-toolbar-btn:hover {
+            background: #252a3a !important;
+            border-color: #6366f1 !important;
+            color: #818cf8 !important;
+        }
+
+        html.theme-dark .toolbar-btn-divider {
+            background: #2d3348 !important;
+        }
+
+        html.theme-dark .filter-label {
+            color: #cbd5e1 !important;
+        }
+
+        html.theme-dark .toolbar-subpanel {
+            background: #1a1d27 !important;
+            border-color: #2d3348 !important;
+        }
+
+        html.theme-dark .subpanel-badge-label {
+            color: #94a3b8 !important;
+        }
+
+        html.theme-dark .date-picker-tag {
+            color: #cbd5e1 !important;
+        }
+
+        html.theme-dark .date-input-unified {
+            background: #161922 !important;
+            border-color: #3d4460 !important;
+        }
+
+        html.theme-dark .date-input-unified input[type="date"] {
+            color: #e2e8f0 !important;
+        }
+
+        html.theme-dark .btn-date-clear-inline {
+            color: #94a3b8 !important;
+        }
+
+        html.theme-dark .btn-date-clear-inline:hover {
+            color: #f87171 !important;
+            background: rgba(239, 68, 68, 0.2) !important;
+        }
+
+        html.theme-dark .subpanel-notice {
+            background: rgba(37, 99, 235, 0.12) !important;
+            border-color: rgba(59, 130, 246, 0.25) !important;
+            border-left-color: #60a5fa !important;
+            color: #93c5fd !important;
+        }
+
+        html.theme-dark .subpanel-notice-icon {
+            color: #60a5fa !important;
+        }
+
+        html.theme-dark .subpanel-notice-text strong {
+            color: #bfdbfe !important;
+        }
+
+        html.theme-dark .form-select-custom option:disabled {
+            color: #64748b !important;
+            background-color: #1e293b !important;
+            cursor: not-allowed !important;
+        }
+
+        .col-dropdown-title {
+            color: #0f172a;
         }
 
         /* Column Selector Dropdown Menu */
@@ -316,7 +675,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-top: 20px;
+            margin-top: 60px;
             font-family: Arial, sans-serif !important;
             line-height: 1.4;
         }
@@ -336,25 +695,320 @@
             line-height: 1.4;
         }
 
+        /* ── DARK THEME STYLES (Screen View) ── */
+        @media screen {
+            html.theme-dark .report-toolbar-card {
+                background: #1a1d27;
+                border-color: #2d3348;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            }
+
+            html.theme-dark .btn-action-secondary {
+                background: #252a3a !important;
+                color: #cbd5e1 !important;
+                border-color: #3d4460 !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            }
+
+            html.theme-dark .btn-action-secondary:hover {
+                background: #2e354a !important;
+                color: #818cf8 !important;
+                border-color: #6366f1 !important;
+            }
+
+            html.theme-dark .filter-label {
+                color: #94a3b8;
+            }
+
+            html.theme-dark .form-select-custom,
+            html.theme-dark .form-input-custom {
+                background-color: #161922 !important;
+                color: #e2e8f0 !important;
+                border-color: #3d4460 !important;
+            }
+
+            html.theme-dark .form-select-custom:focus,
+            html.theme-dark .form-input-custom:focus {
+                background-color: #1e2233 !important;
+                border-color: #818cf8 !important;
+                box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25) !important;
+            }
+
+            html.theme-dark .form-select-custom option {
+                background-color: #161922;
+                color: #e2e8f0;
+            }
+
+            html.theme-dark .btn-date-clear {
+                background: #252a3a !important;
+                border-color: #3d4460 !important;
+                color: #94a3b8 !important;
+            }
+
+            html.theme-dark .btn-date-clear:hover {
+                background: #2e354a !important;
+                border-color: #ef4444 !important;
+                color: #f87171 !important;
+            }
+
+            html.theme-dark .btn-date-clear i {
+                color: #94a3b8 !important;
+            }
+
+            html.theme-dark .btn-date-clear:hover i {
+                color: #f87171 !important;
+            }
+
+            html.theme-dark .btn-report-refresh {
+                background: #252a3a !important;
+                border-color: #3d4460 !important;
+                color: #cbd5e1 !important;
+            }
+
+            html.theme-dark .btn-report-refresh:hover {
+                background: #2e354a !important;
+                border-color: #6366f1 !important;
+                color: #818cf8 !important;
+            }
+
+            html.theme-dark .col-dropdown-menu {
+                background: #1a1d27;
+                border-color: #2d3348;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.55);
+            }
+
+            html.theme-dark .col-dropdown-title {
+                color: #f1f5f9 !important;
+            }
+
+            html.theme-dark .col-dropdown-menu .border-bottom {
+                border-color: #2d3348 !important;
+            }
+
+            html.theme-dark .col-item-label {
+                color: #cbd5e1;
+            }
+
+            html.theme-dark .col-item-label:hover {
+                background: #252a3a;
+                color: #818cf8;
+            }
+
+            html.theme-dark .col-item-label input[type="checkbox"] {
+                accent-color: #6366f1;
+            }
+
+            html.theme-dark .report-notice-banner {
+                background: rgba(37, 99, 235, 0.14);
+                border-color: rgba(59, 130, 246, 0.3);
+                border-left-color: #60a5fa;
+                color: #93c5fd;
+            }
+
+            html.theme-dark .report-notice-icon {
+                color: #60a5fa;
+            }
+
+            html.theme-dark .report-notice-text strong {
+                color: #bfdbfe;
+            }
+
+            html.theme-dark .report-notice-text em {
+                color: #93c5fd;
+            }
+
+            /* Sheet View in Dark Mode (Screen only) */
+            html.theme-dark .landscape-viewport {
+                background: transparent;
+            }
+
+            html.theme-dark .landscape-sheet {
+                background: #1a1d27 !important;
+                border-color: #2d3348 !important;
+                color: #e2e8f0 !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+            }
+
+            html.theme-dark .rep-top-line1,
+            html.theme-dark .rep-top-line2,
+            html.theme-dark .rep-directorate-line,
+            html.theme-dark .rep-cert-paragraph,
+            html.theme-dark .rep-signatures-wrap,
+            html.theme-dark .rep-to-block,
+            html.theme-dark .rep-sig-left,
+            html.theme-dark .rep-sig-right {
+                color: #e2e8f0 !important;
+            }
+
+            html.theme-dark .rep-table {
+                border-color: #3d4460 !important;
+            }
+
+            html.theme-dark .rep-table th {
+                background-color: #1e2233 !important;
+                color: #f1f5f9 !important;
+                border-color: #3d4460 !important;
+            }
+
+            html.theme-dark .rep-table th #lblPrevMonSalary,
+            html.theme-dark .rep-table th #lblPrevMonEpf {
+                color: #94a3b8 !important;
+            }
+
+            html.theme-dark .rep-table th i.text-primary {
+                color: #818cf8 !important;
+            }
+
+            html.theme-dark .rep-table td {
+                background-color: #1a1d27 !important;
+                color: #cbd5e1 !important;
+                border-color: #2d3348 !important;
+            }
+
+            html.theme-dark .rep-table tr:hover td {
+                background-color: #202534 !important;
+            }
+
+            html.theme-dark .rep-table td.col-cat,
+            html.theme-dark .rep-table td.col-manpower {
+                background-color: #161922 !important;
+                color: #f1f5f9 !important;
+            }
+
+            html.theme-dark .cell-inline-date {
+                background-color: #161922 !important;
+                border-color: #3d4460 !important;
+                color: #e2e8f0 !important;
+            }
+
+            html.theme-dark .cell-inline-date:hover {
+                background-color: #1e2233 !important;
+                border-color: #818cf8 !important;
+            }
+
+            html.theme-dark .cell-inline-date:focus {
+                background-color: #1e2233 !important;
+                border-color: #818cf8 !important;
+                box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.25) !important;
+            }
+
+            html.theme-dark input[type="date"]::-webkit-calendar-picker-indicator {
+                filter: invert(0.85);
+            }
+        }
+
         /* PRINT MEDIA STYLES - Exact Landscape Layout */
         @media print {
             @page {
                 size: landscape;
-                margin: 8mm 12mm 8mm 12mm;
+                margin: 8mm 10mm 8mm 10mm;
             }
 
-            body, html {
+            html,
+            body,
+            form,
+            #page-top,
+            #wrapper,
+            #content-wrapper,
+            #content,
+            .container-main,
+            .container-fluid,
+            .landscape-viewport,
+            .landscape-sheet {
                 background: #ffffff !important;
+                background-color: #ffffff !important;
                 color: #000000 !important;
-                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                outline: none !important;
                 padding: 0 !important;
+                margin: 0 !important;
+                min-height: auto !important;
+                height: auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
 
-            .no-print, .report-toolbar-card, .btn-action-primary, .btn-action-word, .btn-action-secondary,
-            .navbar, .navbar-custom, .app-sidebar, #toast-container, .topbar {
+            #wrapper,
+            #content-wrapper,
+            #content {
+                display: block !important;
+                overflow: visible !important;
+            }
+
+            body.sticky-nav-page,
+            body.sticky-nav-page #content-wrapper,
+            body.sticky-nav-page #content,
+            body.sticky-nav-page .container-main,
+            body .container-main,
+            .container-main {
+                margin: 0 !important;
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                padding: 0 !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+                min-height: 0 !important;
+                min-height: auto !important;
+                height: auto !important;
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+            }
+
+            html.theme-dark,
+            html.theme-dark body,
+            html.theme-dark form,
+            html.theme-dark #page-top,
+            html.theme-dark #wrapper,
+            html.theme-dark #content-wrapper,
+            html.theme-dark #content,
+            html.theme-dark .container-main,
+            html.theme-dark .container-fluid,
+            html.theme-dark .landscape-viewport,
+            html.theme-dark .landscape-sheet {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+
+            html.theme-dark .rep-top-line1,
+            html.theme-dark .rep-top-line2,
+            html.theme-dark .rep-directorate-line,
+            html.theme-dark .rep-cert-paragraph,
+            html.theme-dark .rep-signatures-wrap,
+            html.theme-dark .rep-to-block,
+            html.theme-dark .rep-sig-left,
+            html.theme-dark .rep-sig-right,
+            html.theme-dark .rep-table th,
+            html.theme-dark .rep-table td {
+                color: #000000 !important;
+                background-color: #ffffff !important;
+            }
+
+            .no-print,
+            .report-toolbar-card,
+            .btn-action-primary,
+            .btn-action-word,
+            .btn-action-secondary,
+            .navbar,
+            .navbar-custom,
+            .app-sidebar,
+            #toast-container,
+            .topbar,
+            #tourSpotlightRing,
+            #tourTooltipPopover,
+            .modal,
+            .modal-backdrop {
                 display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
             }
 
             .print-only {
@@ -364,25 +1018,28 @@
                 color: #000000 !important;
             }
 
-            .container-main, .container-fluid {
-                padding: 0 !important;
-                margin: 0 !important;
-                max-width: 100% !important;
-            }
-
             .landscape-viewport {
                 padding: 0 !important;
+                margin: 0 !important;
                 overflow: visible !important;
                 display: block !important;
+                width: 100% !important;
+                min-height: auto !important;
+                background: #ffffff !important;
+                background-color: #ffffff !important;
             }
 
             .landscape-sheet {
                 border: none !important;
                 box-shadow: none !important;
+                border-radius: 0 !important;
                 padding: 0 !important;
                 max-width: 100% !important;
                 width: 100% !important;
                 margin: 0 !important;
+                min-height: auto !important;
+                background: #ffffff !important;
+                background-color: #ffffff !important;
             }
 
             .cell-inline-date {
@@ -391,11 +1048,28 @@
 
             .rep-table {
                 page-break-inside: auto;
+                background-color: #ffffff !important;
+                border: 0.5pt solid #000000 !important;
+                width: 100% !important;
+            }
+
+            .rep-table th,
+            .rep-table td {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                border: 0.5pt solid #000000 !important;
+            }
+
+            .rep-table th {
+                font-weight: bold !important;
+                text-align: center !important;
+                background-color: #ffffff !important;
             }
 
             .rep-table tr {
                 page-break-inside: avoid;
                 page-break-after: auto;
+                background-color: #ffffff !important;
             }
 
             .rep-table thead {
@@ -410,24 +1084,32 @@
         
         <!-- NON-PRINTING ACTION TOOLBAR -->
         <div class="report-toolbar-card no-print">
-            <div class="d-flex align-items-center justify-content-between flex-wrap mb-3" style="gap: 12px;">
-                <div class="d-flex align-items-center" style="gap: 12px;">
-                    <a href="Reports.aspx" class="btn-action-secondary" title="Return to Reports Hub">
-                        <i class="fas fa-arrow-left"></i> Reports Hub
+            <!-- TOOLBAR HEADER: TITLE & ACTIONS -->
+            <div class="toolbar-header-row">
+                <div class="toolbar-title-wrap">
+                    <a href="Reports.aspx" class="btn-action-back" title="Return to Reports Hub">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Reports Hub</span>
                     </a>
-                    <h5 class="m-0 font-weight-bold text-dark">
-                        <i class="fas fa-file-invoice-dollar mr-2 text-primary"></i> Monthly Attendance &amp; Recommendation Report
-                    </h5>
+                    <div class="toolbar-title-content">
+                        <h5 class="toolbar-title">
+                            <i class="fas fa-file-invoice-dollar mr-2 text-primary"></i> Monthly Attendance &amp; Recommendation Report
+                        </h5>
+                        <span class="toolbar-subtitle">Official monthly verification, recommendation &amp; voucher generator</span>
+                    </div>
                 </div>
-                <div class="d-flex align-items-center" style="gap: 10px;">
+
+                <div class="toolbar-actions-wrap">
                     <!-- Column Visibility Dropdown -->
                     <div style="position: relative;">
-                        <button type="button" class="btn-action-secondary" onclick="toggleColDropdown(event)" title="Toggle Columns">
-                            <i class="fas fa-columns"></i> Columns <i class="fas fa-chevron-down ml-1" style="font-size: 0.75rem;"></i>
+                        <button type="button" class="btn-toolbar-btn" onclick="toggleColDropdown(event)" title="Toggle Columns">
+                            <i class="fas fa-columns"></i>
+                            <span>Columns</span>
+                            <i class="fas fa-chevron-down ml-1" style="font-size: 0.72rem; opacity: 0.7;"></i>
                         </button>
                         <div class="col-dropdown-menu" id="colDropdownMenu">
                             <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
-                                <span class="font-weight-bold text-dark" style="font-size: 0.8rem;">Column Visibility</span>
+                                <span class="font-weight-bold col-dropdown-title" style="font-size: 0.8rem;">Column Visibility</span>
                                 <button type="button" class="btn btn-link btn-sm p-0 font-weight-bold" style="font-size: 0.75rem;" onclick="resetAllColumns()">Show All</button>
                             </div>
                             <label class="col-item-label"><input type="checkbox" id="chk_col-cat" checked onchange="toggleCol('col-cat', this.checked)" /> <span>Category</span></label>
@@ -443,28 +1125,42 @@
                         </div>
                     </div>
 
+                    <!-- Refresh Button -->
+                    <button type="button" class="btn-toolbar-btn" onclick="loadReportData()" title="Refresh Report Data">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+
+                    <div class="toolbar-btn-divider"></div>
+
                     <!-- Print Button -->
                     <button type="button" class="btn-action-primary" onclick="triggerLandscapePrint()" title="Print in Landscape Orientation">
-                        <i class="fas fa-print"></i> Print (Landscape)
+                        <i class="fas fa-print"></i>
+                        <span>Print (Landscape)</span>
                     </button>
 
                     <!-- Export to Word Button -->
                     <button type="button" class="btn-action-word" onclick="triggerWordExport()" title="Download editable Word Document (.doc)">
-                        <i class="fas fa-file-word"></i> Export to Word
+                        <i class="fas fa-file-word"></i>
+                        <span>Export to Word</span>
                     </button>
                 </div>
             </div>
 
-            <!-- FILTERS & BULK DATE CONTROLS -->
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label class="filter-label">Year</label>
-                    <select id="ddlYear" class="form-select-custom" onchange="onFilterChange()" style="width: 100px;"></select>
+            <!-- PRIMARY FILTERS ROW (Spacious, 4 items only) -->
+            <div class="filter-main-grid">
+                <div class="filter-cell filter-cell-year">
+                    <label class="filter-label" for="ddlYear">
+                        <i class="far fa-calendar text-primary"></i> Year
+                    </label>
+                    <select id="ddlYear" class="form-select-custom" onchange="onYearChange()"></select>
                 </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Month</label>
-                    <select id="ddlMonth" class="form-select-custom" onchange="onFilterChange()" style="width: 130px;">
+                <div class="filter-cell filter-cell-month">
+                    <label class="filter-label" for="ddlMonth">
+                        <i class="far fa-calendar-alt text-primary"></i> Month
+                    </label>
+                    <select id="ddlMonth" class="form-select-custom" onchange="onMonthChange()">
                         <option value="1">January</option>
                         <option value="2">February</option>
                         <option value="3">March</option>
@@ -480,46 +1176,61 @@
                     </select>
                 </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Category</label>
-                    <select id="ddlCategory" class="form-select-custom" onchange="onCategoryChange()" style="min-width: 180px;"></select>
-                </div>
-
-                <div class="filter-group">
-                    <label class="filter-label">Contract / Vendor</label>
-                    <select id="ddlContract" class="form-select-custom" onchange="loadReportData()" style="min-width: 240px;"></select>
-                </div>
-
-                <!-- Bulk Salary Date -->
-                <div class="filter-group">
-                    <label class="filter-label" for="txtMasterSalaryDate" onclick="openDateInput('txtMasterSalaryDate')" style="cursor: pointer;" title="Click to select Previous Month Salary Date from calendar">
-                        <i class="fas fa-calendar-alt text-primary" style="cursor: pointer;"></i> Previous Salary Date
+                <div class="filter-cell filter-cell-cat">
+                    <label class="filter-label" for="ddlCategory">
+                        <i class="fas fa-layer-group text-primary"></i> Category / Tier
                     </label>
-                    <div style="display: inline-flex; align-items: center; gap: 4px;">
-                        <input type="date" id="txtMasterSalaryDate" class="form-select-custom" style="width: 145px; cursor: pointer;" onchange="applyMasterSalaryDate(this.value)" onclick="handleDateInputClick(event, this)" title="Click to select Previous Month Salary Date from calendar" />
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearMasterSalaryDate()" title="Clear Salary Date" style="height: 38px; padding: 0 9px; border-radius: 8px; border-color: #cbd5e1; background: #ffffff;">
-                            <i class="fas fa-times text-muted"></i>
-                        </button>
+                    <select id="ddlCategory" class="form-select-custom" onchange="onCategoryChange()"></select>
+                </div>
+
+                <div class="filter-cell filter-cell-contract">
+                    <label class="filter-label" for="ddlContract">
+                        <i class="fas fa-file-contract text-primary"></i> Contract / Vendor
+                    </label>
+                    <select id="ddlContract" class="form-select-custom" onchange="loadReportData()"></select>
+                </div>
+            </div>
+
+            <!-- SUBPANEL: SUGGESTED PAYMENT DATES & NOTICE -->
+            <div class="toolbar-subpanel">
+                <div class="subpanel-dates-group">
+                    <span class="subpanel-badge-label">
+                        <i class="fas fa-sliders-h text-primary mr-1"></i> Suggested Payment Dates:
+                    </span>
+
+                    <!-- Bulk Salary Date -->
+                    <div class="date-picker-inline" title="Click to select Previous Month Salary Date to auto-fill rows">
+                        <span class="date-picker-tag" onclick="openDateInput('txtMasterSalaryDate')">
+                            <i class="fas fa-money-bill-wave text-primary mr-1"></i> Salary Date:
+                        </span>
+                        <div class="date-input-unified">
+                            <input type="date" id="txtMasterSalaryDate" onchange="applyMasterSalaryDate(this.value)" onclick="handleDateInputClick(event, this)" title="Click to select Previous Month Salary Date" />
+                            <button type="button" class="btn-date-clear-inline" onclick="clearMasterSalaryDate()" title="Clear Salary Date">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bulk EPF Date -->
+                    <div class="date-picker-inline" title="Click to select Previous Month EPF Date to auto-fill rows">
+                        <span class="date-picker-tag" onclick="openDateInput('txtMasterEpfDate')">
+                            <i class="fas fa-shield-alt text-success mr-1"></i> EPF Date:
+                        </span>
+                        <div class="date-input-unified">
+                            <input type="date" id="txtMasterEpfDate" onchange="applyMasterEpfDate(this.value)" onclick="handleDateInputClick(event, this)" title="Click to select Previous Month EPF Date" />
+                            <button type="button" class="btn-date-clear-inline" onclick="clearMasterEpfDate()" title="Clear EPF Date">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Bulk EPF Date -->
-                <div class="filter-group">
-                    <label class="filter-label" for="txtMasterEpfDate" onclick="openDateInput('txtMasterEpfDate')" style="cursor: pointer;" title="Click to select Previous Month EPF Date from calendar">
-                        <i class="fas fa-calendar-check text-success" style="cursor: pointer;"></i> Previous EPF Date
-                    </label>
-                    <div style="display: inline-flex; align-items: center; gap: 4px;">
-                        <input type="date" id="txtMasterEpfDate" class="form-select-custom" style="width: 145px; cursor: pointer;" onchange="applyMasterEpfDate(this.value)" onclick="handleDateInputClick(event, this)" title="Click to select Previous Month EPF Date from calendar" />
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearMasterEpfDate()" title="Clear EPF Date" style="height: 38px; padding: 0 9px; border-radius: 8px; border-color: #cbd5e1; background: #ffffff;">
-                            <i class="fas fa-times text-muted"></i>
-                        </button>
+                <!-- Integrated Notice Banner -->
+                <div class="subpanel-notice">
+                    <i class="fas fa-info-circle subpanel-notice-icon"></i>
+                    <div class="subpanel-notice-text">
+                        <strong>Notice:</strong> <em>Total man days attended</em> includes only actual office working days attended. Declared public holidays, paid leaves, and weekly offs are excluded.
                     </div>
-                </div>
-
-                <div class="filter-group ml-auto">
-                    <button type="button" class="btn btn-light font-weight-bold" onclick="loadReportData()" style="height: 38px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
-                        <i class="fas fa-sync-alt mr-1"></i> Refresh
-                    </button>
                 </div>
             </div>
         </div>
@@ -551,7 +1262,7 @@
                             <th class="col-manpower" style="width: 9%;">Manpower</th>
                             <th class="col-id" style="width: 6%;">ID No.</th>
                             <th class="col-name" style="width: 16%;">Name of the Individual</th>
-                            <th class="col-attended" style="width: 9%;">Total no. of man days attended</th>
+                            <th class="col-attended" style="width: 9%;">Total no. of man days attended <i class="fas fa-info-circle text-primary no-print ml-1" style="font-size: 0.8rem; cursor: help;" title="Notice: Total attended days counts only actual working days attended; it does not include public holidays, paid leave, or weekly offs."></i></th>
                             <th class="col-not-attended" style="width: 8%;">Total no. of days not attended</th>
                             <th class="col-remarks" style="width: 18%;">Remarks</th>
                             <th class="col-salary-date" id="thSalaryDate" style="width: 9%;">Received date of Previous Month<br />Salary<br /><span id="lblPrevMonSalary">( May)</span></th>
@@ -598,6 +1309,7 @@
     <script>
         let currentCategories = [];
         let currentReportData = null;
+        let isUserPoc = false;
         let columnVisibility = {
             'col-cat': true,
             'col-manpower': true,
@@ -642,6 +1354,8 @@
                     return;
                 }
 
+                isUserPoc = (data.IsPoc === true);
+
                 // Populate Years (CurrentYear - 2 to CurrentYear + 1)
                 const ySelect = document.getElementById('ddlYear');
                 ySelect.innerHTML = '';
@@ -673,6 +1387,9 @@
                     cSelect.appendChild(opt);
                 });
 
+                // Apply POC view restriction constraints for initial selection
+                applyPocViewRestrictions();
+
                 // Trigger contracts and initial report load
                 onCategoryChange();
             })
@@ -681,11 +1398,113 @@
             });
         }
 
-        function onFilterChange() {
+        function getSelectedCategoryInfo() {
+            const catSelect = document.getElementById('ddlCategory');
+            if (!catSelect || !catSelect.value) return null;
+            const tid = parseInt(catSelect.value);
+            return currentCategories.find(c => c.TierId === tid) || null;
+        }
+
+        function applyPocViewRestrictions() {
+            const ySelect = document.getElementById('ddlYear');
+            const mSelect = document.getElementById('ddlMonth');
+            if (!ySelect || !mSelect) return;
+
+            const catInfo = getSelectedCategoryInfo();
+            const isRestricted = isUserPoc && catInfo && catInfo.IsRestricted;
+
+            if (!isRestricted) {
+                // Remove all restrictions
+                Array.from(ySelect.options).forEach(opt => {
+                    opt.disabled = false;
+                    opt.style.color = '';
+                    opt.style.backgroundColor = '';
+                });
+                Array.from(mSelect.options).forEach(opt => {
+                    opt.disabled = false;
+                    opt.style.color = '';
+                    opt.style.backgroundColor = '';
+                });
+                return;
+            }
+
+            const minD = catInfo.MinAllowedDate ? new Date(catInfo.MinAllowedDate + 'T00:00:00') : null;
+            const maxD = catInfo.MaxAllowedDate ? new Date(catInfo.MaxAllowedDate + 'T23:59:59') : null;
+
+            // 1. Filter Years
+            let firstValidYear = null;
+            Array.from(ySelect.options).forEach(opt => {
+                const y = parseInt(opt.value);
+                const yStart = new Date(y, 0, 1, 0, 0, 0);
+                const yEnd = new Date(y, 11, 31, 23, 59, 59);
+
+                let allowed = true;
+                if (minD && yEnd < minD) allowed = false;
+                if (maxD && yStart > maxD) allowed = false;
+
+                opt.disabled = !allowed;
+                if (!allowed) {
+                    opt.style.color = '#94a3b8';
+                    opt.style.backgroundColor = document.documentElement.classList.contains('theme-dark') ? '#1e293b' : '#f1f5f9';
+                } else {
+                    opt.style.color = '';
+                    opt.style.backgroundColor = '';
+                    if (firstValidYear === null) firstValidYear = opt.value;
+                }
+            });
+
+            // If selected year is disabled, select first valid year
+            if (ySelect.options[ySelect.selectedIndex] && ySelect.options[ySelect.selectedIndex].disabled && firstValidYear !== null) {
+                ySelect.value = firstValidYear;
+            }
+
+            // 2. Filter Months for selected Year
+            const curY = parseInt(ySelect.value);
+            let firstValidMonth = null;
+            Array.from(mSelect.options).forEach(opt => {
+                const m = parseInt(opt.value); // 1 to 12
+                const mStart = new Date(curY, m - 1, 1, 0, 0, 0);
+                const mEnd = new Date(curY, m, 0, 23, 59, 59);
+
+                let allowed = true;
+                if (minD && mEnd < minD) allowed = false;
+                if (maxD && mStart > maxD) allowed = false;
+
+                opt.disabled = !allowed;
+                if (!allowed) {
+                    opt.style.color = '#94a3b8';
+                    opt.style.backgroundColor = document.documentElement.classList.contains('theme-dark') ? '#1e293b' : '#f1f5f9';
+                } else {
+                    opt.style.color = '';
+                    opt.style.backgroundColor = '';
+                    if (firstValidMonth === null) firstValidMonth = opt.value;
+                }
+            });
+
+            // If selected month is disabled, select first valid month
+            if (mSelect.options[mSelect.selectedIndex] && mSelect.options[mSelect.selectedIndex].disabled && firstValidMonth !== null) {
+                mSelect.value = firstValidMonth;
+            }
+        }
+
+        function onYearChange() {
+            applyPocViewRestrictions();
             const year = parseInt(document.getElementById('ddlYear').value);
             const month = parseInt(document.getElementById('ddlMonth').value);
             updateDefaultMasterDates(year, month);
             onCategoryChange();
+        }
+
+        function onMonthChange() {
+            applyPocViewRestrictions();
+            const year = parseInt(document.getElementById('ddlYear').value);
+            const month = parseInt(document.getElementById('ddlMonth').value);
+            updateDefaultMasterDates(year, month);
+            loadReportData();
+        }
+
+        function onFilterChange() {
+            onYearChange();
         }
 
         function updateDefaultMasterDates(year, month) {
@@ -846,11 +1665,13 @@
         }
 
         function onCategoryChange() {
+            applyPocViewRestrictions();
             const year = parseInt(document.getElementById('ddlYear').value);
             const month = parseInt(document.getElementById('ddlMonth').value);
             const tierId = parseInt(document.getElementById('ddlCategory').value);
 
             if (!year || !month || !tierId) return;
+            updateDefaultMasterDates(year, month);
 
             fetch('MonthlyAttendanceReport.aspx/GetContracts', {
                 method: 'POST',
@@ -985,7 +1806,7 @@
 
                 // Name
                 const tdName = document.createElement('td');
-                tdName.className = 'col-name cell-center';
+                tdName.className = 'col-name cell-left';
                 tdName.textContent = emp.Name;
                 tr.appendChild(tdName);
 
@@ -1003,7 +1824,7 @@
 
                 // Remarks
                 const tdRem = document.createElement('td');
-                tdRem.className = 'col-remarks cell-center';
+                tdRem.className = 'col-remarks cell-left';
                 tdRem.textContent = emp.Remarks;
                 tr.appendChild(tdRem);
 
@@ -1155,13 +1976,26 @@
                 const leftText = leftEl ? leftEl.innerHTML : 'Signature of Group Director';
                 const rightText = rightEl ? rightEl.innerHTML : '(Point of Contact)';
                 sigWrap.outerHTML = `
-                    <table style="width: 100%; border: none !important; margin-top: 28px; margin-bottom: 20px;">
+                    <table class="sig-table" style="width: 100%; border: none !important; border-collapse: collapse; margin-top: 8pt; margin-bottom: 6pt; mso-margin-top-alt: 8pt; mso-margin-bottom-alt: 6pt;">
                         <tr>
-                            <td style="border: none !important; text-align: left; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; width: 50%; vertical-align: top;">${leftText}</td>
-                            <td style="border: none !important; text-align: right; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold; width: 50%; vertical-align: top;">${rightText}</td>
+                            <td style="border: none !important; text-align: left; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; width: 50%; vertical-align: top; padding: 0; mso-margin-top-alt: 0; mso-margin-bottom-alt: 0;">${leftText}</td>
+                            <td style="border: none !important; text-align: right; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; width: 50%; vertical-align: top; padding: 0; mso-margin-top-alt: 0; mso-margin-bottom-alt: 0;">${rightText}</td>
                         </tr>
                     </table>
                 `;
+            }
+
+            // Adjust To block indentation and spacing for Word
+            const toBlock = clone.querySelector('#toBlockEl');
+            if (toBlock) {
+                toBlock.querySelectorAll('div').forEach((div, idx) => {
+                    if (idx > 0) {
+                        div.style.paddingLeft = '20pt';
+                    }
+                    div.style.margin = '0';
+                    div.style.msoMarginTopAlt = '0';
+                    div.style.msoMarginBottomAlt = '0';
+                });
             }
 
             const month = document.getElementById('ddlMonth').options[document.getElementById('ddlMonth').selectedIndex].text;
@@ -1182,27 +2016,124 @@
 <![endif]-->
 <style>
 @page Section1 {
-  size: 11.0in 8.5in;
+  size: 11.69in 8.27in;
   mso-page-orientation: landscape;
-  margin: 0.4in 0.8in 0.6in 0.8in;
-  mso-header-margin: 0.4in;
-  mso-footer-margin: 0.4in;
+  margin: 0.3in 0.4in 0.3in 0.4in;
+  mso-header-margin: 0.15in;
+  mso-footer-margin: 0.15in;
 }
 div.Section1 { page: Section1; }
-body { font-family: Arial, sans-serif; font-size: 11pt; color: #000000; margin: 0; padding: 0; }
-.rep-top-line1 { font-family: Arial, sans-serif; font-weight: bold; font-size: 11pt; text-align: center; margin-bottom: 6px; }
-.rep-top-line2 { font-family: Arial, sans-serif; font-weight: bold; font-size: 11pt; text-align: center; margin-bottom: 12px; }
-.rep-directorate-line { font-family: Arial, sans-serif; font-weight: bold; font-size: 11pt; text-align: left; margin-bottom: 10px; }
-table { border-collapse: collapse; width: 100%; margin-top: 10px; margin-bottom: 16px; border: 0.5pt solid #000000; }
-table, th, td { border: 0.5pt solid #000000; }
-th { font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; text-align: center; vertical-align: middle; padding: 4px 6px; background-color: #ffffff; }
-td { font-family: Arial, sans-serif; font-size: 10pt; vertical-align: middle; padding: 4px 6px; text-align: center; }
+body {
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  color: #000000;
+  margin: 0;
+  padding: 0;
+}
+p, div {
+  margin: 0;
+  padding: 0;
+  mso-margin-top-alt: 0;
+  mso-margin-bottom-alt: 0;
+  mso-line-height-rule: at-least;
+}
+.rep-top-line1 {
+  font-family: Arial, sans-serif !important;
+  font-weight: bold !important;
+  font-size: 11pt !important;
+  text-align: center !important;
+  margin: 0 0 2pt 0 !important;
+  mso-margin-bottom-alt: 2pt;
+  line-height: 1.15;
+}
+.rep-top-line2 {
+  font-family: Arial, sans-serif !important;
+  font-weight: bold !important;
+  font-size: 10pt !important;
+  text-align: center !important;
+  margin: 0 0 4pt 0 !important;
+  mso-margin-bottom-alt: 4pt;
+  line-height: 1.15;
+}
+.rep-directorate-line {
+  font-family: Arial, sans-serif !important;
+  font-weight: bold !important;
+  font-size: 10pt !important;
+  text-align: left !important;
+  margin: 0 0 4pt 0 !important;
+  mso-margin-bottom-alt: 4pt;
+}
+table.rep-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 2pt;
+  margin-bottom: 6pt;
+  mso-margin-top-alt: 2pt;
+  mso-margin-bottom-alt: 6pt;
+  border: 0.5pt solid #000000;
+  mso-table-lspace: 0pt;
+  mso-table-rspace: 0pt;
+}
+table.rep-table th, table.rep-table td {
+  border: 0.5pt solid #000000;
+  padding: 2.5pt 3.5pt;
+  vertical-align: middle;
+  mso-margin-top-alt: 0;
+  mso-margin-bottom-alt: 0;
+  line-height: 1.12;
+}
+table.rep-table th {
+  font-family: Arial, sans-serif;
+  font-size: 9pt;
+  font-weight: bold;
+  text-align: center;
+  background-color: #ffffff;
+}
+table.rep-table td {
+  font-family: Arial, sans-serif;
+  font-size: 9pt;
+  text-align: center;
+}
 .cell-left { text-align: left !important; }
 .cell-center { text-align: center !important; }
 .cell-right { text-align: right !important; }
 .cell-bold { font-weight: bold !important; }
-.rep-cert-paragraph { font-family: Arial, sans-serif; font-size: 11pt; text-align: left; margin-top: 14px; margin-bottom: 24px; line-height: 1.4; }
-.rep-to-block { font-family: Arial, sans-serif; font-size: 11pt; text-align: left; margin-top: 24px; line-height: 1.4; }
+.rep-cert-paragraph {
+  font-family: Arial, sans-serif !important;
+  font-size: 9.5pt !important;
+  text-align: left !important;
+  margin: 5pt 0 8pt 0 !important;
+  mso-margin-top-alt: 5pt;
+  mso-margin-bottom-alt: 8pt;
+  line-height: 1.2;
+}
+table.sig-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: none !important;
+  margin-top: 8pt;
+  margin-bottom: 6pt;
+  mso-margin-top-alt: 8pt;
+  mso-margin-bottom-alt: 6pt;
+}
+table.sig-table td {
+  border: none !important;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  font-weight: bold;
+  vertical-align: top;
+  mso-margin-top-alt: 0;
+  mso-margin-bottom-alt: 0;
+}
+.rep-to-block {
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  text-align: left;
+  margin-top: 6pt;
+  mso-margin-top-alt: 6pt;
+  line-height: 1.15;
+}
 </style>
 </head>
 <body>

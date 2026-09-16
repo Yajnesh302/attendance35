@@ -13,6 +13,14 @@ namespace AttendanceApp
                 Response.Redirect("Login.aspx");
                 return;
             }
+
+            string roleMode = Session["RoleMode"]?.ToString() ?? "";
+            int role = Convert.ToInt32(Session["Role"] ?? 0);
+            if (roleMode == "SubUser" || role == 6)
+            {
+                Response.Redirect("Dashboard.aspx");
+                return;
+            }
         }
     }
 }

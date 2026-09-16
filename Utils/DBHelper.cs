@@ -10,12 +10,16 @@ namespace AttendanceApp.Utils
     {
         public static string GetCompanyDBConnection()
         {
-            return ConfigurationManager.ConnectionStrings["CompanyDB"].ConnectionString;
+            var cs = ConfigurationManager.ConnectionStrings["CompanyDB"];
+            if (cs != null && !string.IsNullOrEmpty(cs.ConnectionString)) return cs.ConnectionString;
+            return "User Id=system;Password=root;Data Source=//127.0.0.1:1521/xe;";
         }
 
         public static string GetAttendanceDBConnection()
         {
-            return ConfigurationManager.ConnectionStrings["AttendanceDB"].ConnectionString;
+            var cs = ConfigurationManager.ConnectionStrings["AttendanceDB"];
+            if (cs != null && !string.IsNullOrEmpty(cs.ConnectionString)) return cs.ConnectionString;
+            return "User Id=system;Password=root;Data Source=//127.0.0.1:1521/xe;";
         }
 
         [ThreadStatic]
@@ -1629,7 +1633,7 @@ namespace AttendanceApp.Utils
                     int catIdVal;
                     if (int.TryParse(categoryFilter, out catIdVal))
                     {
-                        query += " AND (mc.Id = :CatId OR mc.Name = :CatName)";
+                        query += " AND (mc.Id = :CatId OR mc.Name = :CatName OR t.Id = :CatId)";
                         prms.Add(new OracleParameter("CatId", catIdVal));
                         prms.Add(new OracleParameter("CatName", categoryFilter));
                     }
@@ -1767,6 +1771,303 @@ namespace AttendanceApp.Utils
 
             return info;
         }
+
+        public static AttendanceCompletenessResult CheckMonthAttendanceCompleteness(int year, int month, string category, int? contractPeriodId, int role, string pcno)
+        {
+            AttendanceCompletenessResult result = new AttendanceCompletenessResult
+            {
+                HasIncomplete = false,
+                MissingCount = 0,
+                UnspecifiedZeroCount = 0,
+                PendingPairingCount = 0,
+                MissingExamples = new List<string>(),
+                UnspecifiedZeroExamples = new List<string>(),
+                PendingPairingExamples = new List<string>(),
+                WarningMessage = ""
+            };
+
+            // Only relevant for Admin roles
+            if (role != 1 && role != 4) return result;
+
+            try
+            {
+                int dbMonth = month + 1;
+                DateTime firstDay = new DateTime(year, dbMonth, 1);
+                int daysInMonth = DateTime.DaysInMonth(year, dbMonth);
+                DateTime lastDay = new DateTime(year, dbMonth, daysInMonth);
+
+                int catTierId = 0;
+                int.TryParse(category, out catTierId);
+
+                List<string> targetTierIds = new List<string>();
+                if (contractPeriodId.HasValue && contractPeriodId.Value > 0)
+                {
+                    // contractPeriodId specified; will filter by contract period
+                }
+                else if (catTierId > 0)
+                {
+                    targetTierIds.Add(catTierId.ToString());
+                }
+                else
+                {
+                    // If "All" or empty, gather all visible tiers
+                    DataTable dtTiers = GetVisibleTiersDataTable(pcno, role);
+                    foreach (DataRow row in dtTiers.Rows)
+                    {
+                        targetTierIds.Add(row["TierId"].ToString());
+                    }
+                }
+
+                using (OracleConnection conn = new OracleConnection(GetAttendanceDBConnection()))
+                {
+                    conn.Open();
+
+                    // 1. Fetch Employees
+                    string empSql;
+                    List<OracleParameter> empParams = new List<OracleParameter>();
+
+                    if (contractPeriodId.HasValue && contractPeriodId.Value > 0)
+                    {
+                        empSql = @"
+                            SELECT DISTINCT e.ID, e.Name, e.Department, e.JoinDate, e.ResignDate, e.LeaveBalance,
+                                   cp.EndDate AS ContractEndDate, e.MasterId, ee.TierId
+                            FROM Employees e
+                            JOIN EmployeeEngagements ee ON e.MasterId = ee.EmpID
+                            JOIN ContractPeriods cp ON ee.ContractPeriodId = cp.Id
+                            WHERE ee.ContractPeriodId = :SelectedCpId";
+                        empParams.Add(new OracleParameter("SelectedCpId", contractPeriodId.Value));
+                    }
+                    else if (targetTierIds.Count > 0)
+                    {
+                        List<string> pNames = new List<string>();
+                        for (int i = 0; i < targetTierIds.Count; i++)
+                        {
+                            string pName = "VTierId" + i;
+                            pNames.Add(":" + pName);
+                            empParams.Add(new OracleParameter(pName, targetTierIds[i]));
+                        }
+                        empSql = string.Format(@"
+                            SELECT DISTINCT e.ID, e.Name, e.Department, e.JoinDate, e.ResignDate, e.LeaveBalance,
+                                   e.ContractEndDate, e.MasterId, e.TierId
+                            FROM Employees e
+                            WHERE e.TierId IN ({0})", string.Join(", ", pNames));
+                    }
+                    else
+                    {
+                        return result;
+                    }
+
+                    DataTable dtEmp = new DataTable();
+                    using (OracleCommand cmdEmp = new OracleCommand(empSql, conn))
+                    {
+                        cmdEmp.BindByName = true;
+                        foreach (var p in empParams) cmdEmp.Parameters.Add(p);
+                        using (OracleDataAdapter da = new OracleDataAdapter(cmdEmp))
+                        {
+                            da.Fill(dtEmp);
+                        }
+                    }
+
+                    if (dtEmp.Rows.Count == 0) return result;
+
+                    // 2. Fetch Engagements
+                    string engSql = @"
+                        SELECT ee.EmpID, ee.StartDate, ee.EndDate, cp.EndDate AS CpEndDate
+                        FROM EmployeeEngagements ee
+                        JOIN ContractPeriods cp ON ee.ContractPeriodId = cp.Id
+                        WHERE (ee.StartDate <= :LastDay AND (ee.EndDate IS NULL OR ee.EndDate >= :FirstDay))";
+                    List<OracleParameter> engParams = new List<OracleParameter> {
+                        new OracleParameter("LastDay", lastDay),
+                        new OracleParameter("FirstDay", firstDay)
+                    };
+                    if (contractPeriodId.HasValue && contractPeriodId.Value > 0)
+                    {
+                        engSql += " AND ee.ContractPeriodId = :SelectedCpId";
+                        engParams.Add(new OracleParameter("SelectedCpId", contractPeriodId.Value));
+                    }
+
+                    DataTable dtEng = new DataTable();
+                    using (OracleCommand cmdEng = new OracleCommand(engSql, conn))
+                    {
+                        cmdEng.BindByName = true;
+                        foreach (var p in engParams) cmdEng.Parameters.Add(p);
+                        using (OracleDataAdapter da = new OracleDataAdapter(cmdEng))
+                        {
+                            da.Fill(dtEng);
+                        }
+                    }
+
+                    Dictionary<string, List<Tuple<DateTime, DateTime?>>> engDict = new Dictionary<string, List<Tuple<DateTime, DateTime?>>>();
+                    foreach (DataRow dr in dtEng.Rows)
+                    {
+                        string empId = dr["EmpID"].ToString();
+                        DateTime sDate = Convert.ToDateTime(dr["StartDate"]);
+                        DateTime? eeEndDate = dr["EndDate"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(dr["EndDate"]) : null;
+                        DateTime? cpEndDate = dr["CpEndDate"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(dr["CpEndDate"]) : null;
+
+                        DateTime? effEnd = null;
+                        if (eeEndDate.HasValue && cpEndDate.HasValue)
+                            effEnd = eeEndDate.Value < cpEndDate.Value ? eeEndDate.Value : cpEndDate.Value;
+                        else if (eeEndDate.HasValue)
+                            effEnd = eeEndDate;
+                        else if (cpEndDate.HasValue)
+                            effEnd = cpEndDate;
+
+                        if (!engDict.ContainsKey(empId))
+                            engDict[empId] = new List<Tuple<DateTime, DateTime?>>();
+                        engDict[empId].Add(Tuple.Create(sDate, effEnd));
+                    }
+
+                    // 3. Fetch Raw Attendance for Year and Month
+                    string attSql = @"
+                        SELECT EmpID, Day, StatusValue, IsHoliday, LeaveType, AutoSat
+                        FROM Attendance
+                        WHERE Year = :Year AND Month = :Month
+                          AND EmpID != 'GLOBAL' AND EmpID NOT LIKE 'GLOBAL_%'
+                          AND Day > 0";
+                    DataTable dtAtt = new DataTable();
+                    using (OracleCommand cmdAtt = new OracleCommand(attSql, conn))
+                    {
+                        cmdAtt.BindByName = true;
+                        cmdAtt.Parameters.Add(new OracleParameter("Year", year));
+                        cmdAtt.Parameters.Add(new OracleParameter("Month", month));
+                        using (OracleDataAdapter da = new OracleDataAdapter(cmdAtt))
+                        {
+                            da.Fill(dtAtt);
+                        }
+                    }
+
+                    Dictionary<string, Dictionary<int, Tuple<float?, bool, string, int>>> attDict = 
+                        new Dictionary<string, Dictionary<int, Tuple<float?, bool, string, int>>>();
+                    foreach (DataRow dr in dtAtt.Rows)
+                    {
+                        string empId = dr["EmpID"].ToString();
+                        int day = Convert.ToInt32(dr["Day"]);
+                        float? val = dr["StatusValue"] != DBNull.Value ? (float?)Convert.ToSingle(dr["StatusValue"]) : null;
+                        bool isHol = dr["IsHoliday"] != DBNull.Value && Convert.ToInt32(dr["IsHoliday"]) == 1;
+                        string lType = dr["LeaveType"] != DBNull.Value ? dr["LeaveType"].ToString() : "";
+                        int aSat = dr.Table.Columns.Contains("AutoSat") && dr["AutoSat"] != DBNull.Value ? Convert.ToInt32(dr["AutoSat"]) : 0;
+
+                        if (!attDict.ContainsKey(empId))
+                            attDict[empId] = new Dictionary<int, Tuple<float?, bool, string, int>>();
+                        attDict[empId][day] = Tuple.Create(val, isHol, lType, aSat);
+                    }
+
+                    // 4. Iterate and evaluate completeness
+                    foreach (DataRow row in dtEmp.Rows)
+                    {
+                        string masterId = row["MasterId"].ToString();
+                        string empName = row["Name"] != DBNull.Value ? row["Name"].ToString() : masterId;
+                        DateTime? joinDate = row["JoinDate"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["JoinDate"]) : null;
+                        DateTime? resignDate = row["ResignDate"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["ResignDate"]) : null;
+                        DateTime? contractEndDate = row["ContractEndDate"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(row["ContractEndDate"]) : null;
+
+                        if (joinDate.HasValue && (year < joinDate.Value.Year || (year == joinDate.Value.Year && month < (joinDate.Value.Month - 1))))
+                            continue;
+                        if (resignDate.HasValue && (year > resignDate.Value.Year || (year == resignDate.Value.Year && month > (resignDate.Value.Month - 1))))
+                            continue;
+                        if (contractEndDate.HasValue && (year > contractEndDate.Value.Year || (year == contractEndDate.Value.Year && month > (contractEndDate.Value.Month - 1))))
+                            continue;
+
+                        List<Tuple<DateTime, DateTime?>> empEngs = engDict.ContainsKey(masterId) ? engDict[masterId] : new List<Tuple<DateTime, DateTime?>>();
+                        Dictionary<int, Tuple<float?, bool, string, int>> empAttMap = attDict.ContainsKey(masterId) ? attDict[masterId] : new Dictionary<int, Tuple<float?, bool, string, int>>();
+
+                        for (int d = 1; d <= daysInMonth; d++)
+                        {
+                            DateTime currDate = new DateTime(year, dbMonth, d);
+                            bool isOutOfBounds = true;
+                            foreach (var eng in empEngs)
+                            {
+                                if (currDate >= eng.Item1.Date && (!eng.Item2.HasValue || currDate <= eng.Item2.Value.Date))
+                                {
+                                    isOutOfBounds = false;
+                                    break;
+                                }
+                            }
+
+                            if (isOutOfBounds && currDate.DayOfWeek == DayOfWeek.Saturday)
+                            {
+                                DateTime prevFriday = currDate.AddDays(-1);
+                                if (resignDate.HasValue && resignDate.Value.Date == prevFriday.Date && resignDate.Value.DayOfWeek == DayOfWeek.Friday)
+                                {
+                                    foreach (var eng in empEngs)
+                                    {
+                                        if (prevFriday >= eng.Item1.Date && (!eng.Item2.HasValue || prevFriday <= eng.Item2.Value.Date))
+                                        {
+                                            isOutOfBounds = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (isOutOfBounds) continue;
+
+                            Tuple<float?, bool, string, int> cell = empAttMap.ContainsKey(d) ? empAttMap[d] : Tuple.Create((float?)null, false, "", 0);
+
+                            // Skip non-holiday Sundays
+                            if (currDate.DayOfWeek == DayOfWeek.Sunday && !cell.Item2) continue;
+
+                            string exLabel = $"{empName} ({currDate.ToString("dd-MMM")})";
+
+                            // Condition 1: Missing attendance (non-holiday working day with no record or null value)
+                            if (!cell.Item2 && (!empAttMap.ContainsKey(d) || !cell.Item1.HasValue))
+                            {
+                                result.MissingCount++;
+                                if (result.MissingExamples.Count < 3) result.MissingExamples.Add(exLabel);
+                            }
+                            // Condition 3: Half-day pending pairing
+                            else if (cell.Item3.Equals("Pending Pairing", StringComparison.OrdinalIgnoreCase) || 
+                                     (cell.Item1.HasValue && cell.Item1.Value == 0.5f && 
+                                      !cell.Item3.Equals("Carried", StringComparison.OrdinalIgnoreCase) && 
+                                      !cell.Item3.Equals("Paired Paid", StringComparison.OrdinalIgnoreCase) && 
+                                      !cell.Item3.Equals("Paired Unpaid", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                result.PendingPairingCount++;
+                                if (result.PendingPairingExamples.Count < 3) result.PendingPairingExamples.Add(exLabel);
+                            }
+                            // Condition 2: 0 is entered and paid or unpaid is not specified
+                            else if (!cell.Item2 && cell.Item1.HasValue && cell.Item1.Value == 0f)
+                            {
+                                bool isPaidOrUnpaid = cell.Item3.Equals("Paid", StringComparison.OrdinalIgnoreCase) ||
+                                                      cell.Item3.Equals("Unpaid", StringComparison.OrdinalIgnoreCase) ||
+                                                      cell.Item3.Equals("Paired Unpaid", StringComparison.OrdinalIgnoreCase);
+
+                                if (!isPaidOrUnpaid)
+                                {
+                                    // Ignore automatic Saturday deduction (AutoSat = 1)
+                                    if (currDate.DayOfWeek != DayOfWeek.Saturday || cell.Item4 != 1)
+                                    {
+                                        result.UnspecifiedZeroCount++;
+                                        if (result.UnspecifiedZeroExamples.Count < 3) result.UnspecifiedZeroExamples.Add(exLabel);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (result.MissingCount > 0 || result.UnspecifiedZeroCount > 0 || result.PendingPairingCount > 0)
+                    {
+                        result.HasIncomplete = true;
+                        List<string> msgParts = new List<string>();
+                        if (result.MissingCount > 0)
+                            msgParts.Add($"{result.MissingCount} day(s) have unentered attendance");
+                        if (result.UnspecifiedZeroCount > 0)
+                            msgParts.Add($"{result.UnspecifiedZeroCount} absent (0) day(s) have neither Paid nor Unpaid specified");
+                        if (result.PendingPairingCount > 0)
+                            msgParts.Add($"{result.PendingPairingCount} half-day pairing(s) are pending classification");
+
+                        result.WarningMessage = string.Join("; ", msgParts);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error in CheckMonthAttendanceCompleteness: " + ex.Message);
+            }
+
+            return result;
+        }
     }
 
     [Serializable]
@@ -1805,6 +2106,19 @@ namespace AttendanceApp.Utils
         public int EffectiveRole { get; set; }   // 1, 0, or 4
         public string Icon { get; set; }         // e.g. "fas fa-user-shield"
         public string BadgeColor { get; set; }   // e.g. "#4f46e5"
+    }
+
+    [Serializable]
+    public class AttendanceCompletenessResult
+    {
+        public bool HasIncomplete { get; set; }
+        public int MissingCount { get; set; }
+        public int UnspecifiedZeroCount { get; set; }
+        public int PendingPairingCount { get; set; }
+        public List<string> MissingExamples { get; set; }
+        public List<string> UnspecifiedZeroExamples { get; set; }
+        public List<string> PendingPairingExamples { get; set; }
+        public string WarningMessage { get; set; }
     }
 }
 

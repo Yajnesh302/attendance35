@@ -75,7 +75,7 @@
         /* Reports Grid */
         .reports-hub-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 380px));
             gap: 24px;
             margin-top: 10px;
         }
@@ -100,23 +100,6 @@
             transform: translateY(-5px);
             box-shadow: 0 18px 36px rgba(0, 0, 0, 0.09);
             border-color: #cbd5e1;
-        }
-
-        .report-card-badge {
-            font-size: 0.72rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-bottom: 16px;
-        }
-
-        .badge-active-rep {
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #fde68a;
         }
 
         .report-card-icon-wrap {
@@ -180,25 +163,67 @@
             transform: translateX(4px);
         }
 
-        /* Coming Soon Placeholder Card */
-        .report-placeholder-card {
-            border: 2px dashed #cbd5e1;
-            background: rgba(248, 250, 252, 0.6);
-            border-radius: 20px;
-            padding: 28px 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            min-height: 270px;
+        /* ── Dark Theme Overrides for Reports Hub ── */
+        html.theme-dark .reports-page-title {
+            color: #f1f5f9;
+        }
+
+        html.theme-dark .reports-page-sub {
             color: #94a3b8;
         }
 
-        .report-placeholder-icon {
-            font-size: 2.2rem;
+        html.theme-dark .btn-back-dash {
+            background: #1e2233;
             color: #cbd5e1;
-            margin-bottom: 12px;
+            border-color: #3d4460;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        html.theme-dark .btn-back-dash:hover {
+            background: #252a3a;
+            color: #818cf8;
+            border-color: #6366f1;
+            transform: translateX(-2px);
+        }
+
+        html.theme-dark .report-hub-card {
+            background: #1a1d27;
+            border-color: #2d3348;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+        }
+
+        html.theme-dark .report-hub-card:hover {
+            background: #1e2233;
+            border-color: #6366f1;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(99, 102, 241, 0.2);
+            transform: translateY(-5px);
+        }
+
+        html.theme-dark .icon-wrap-amber {
+            background: rgba(245, 158, 11, 0.16);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.35);
+        }
+
+        html.theme-dark .report-card-title {
+            color: #f1f5f9;
+        }
+
+        html.theme-dark .report-card-subtitle {
+            color: #f59e0b;
+        }
+
+        html.theme-dark .report-card-desc {
+            color: #94a3b8;
+        }
+
+        html.theme-dark .report-card-footer-action {
+            border-top-color: #2d3348;
+            color: #818cf8;
+        }
+
+        html.theme-dark .report-hub-card:hover .report-card-footer-action {
+            color: #a5b4fc;
         }
     </style>
 </asp:Content>
@@ -228,9 +253,6 @@
             <!-- 1. Monthly Attendance & Recommendation Report -->
             <a href="MonthlyAttendanceReport.aspx" class="report-hub-card">
                 <div>
-                    <span class="report-card-badge badge-active-rep">
-                        <i class="fas fa-check-circle mr-1"></i> Active Report
-                    </span>
                     <div class="report-card-icon-wrap icon-wrap-amber">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
@@ -245,17 +267,6 @@
                     <i class="fas fa-arrow-right"></i>
                 </div>
             </a>
-
-            <!-- 2. Future Placeholder Card -->
-            <div class="report-placeholder-card">
-                <div class="report-placeholder-icon">
-                    <i class="fas fa-layer-group"></i>
-                </div>
-                <h5 style="font-weight: 700; color: #64748b; margin-bottom: 6px;">More Reports Coming Soon</h5>
-                <p style="font-size: 0.84rem; color: #94a3b8; max-width: 260px; margin: 0;">
-                    Additional analytical, statutory, and audit workforce reports will appear here as they are introduced.
-                </p>
-            </div>
         </div>
     </div>
 </asp:Content>

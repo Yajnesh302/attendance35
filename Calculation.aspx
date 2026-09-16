@@ -409,6 +409,24 @@
     
     <div class="card shadow-sm border-0 rounded-lg mb-4 calc-sticky-card">
         <div class="card-body p-4 bg-white text-dark">
+            <!-- Attendance Completeness Warning Banner -->
+            <div id="calcAttendanceWarning" class="alert alert-warning mb-3" style="display: none; border-left: 5px solid #f59e0b; background-color: #fffbeb; border-color: #fde68a; color: #92400e; padding: 14px 18px; border-radius: 8px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.08);">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 1.4rem; color: #d97706; margin-top: 2px; flex-shrink: 0;"></i>
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 700; font-size: 0.95rem; color: #92400e; margin-bottom: 4px;" id="calcWarningTitle">
+                            Attendance Incompleteness Warning
+                        </div>
+                        <div id="calcWarningDetails" style="font-size: 0.88rem; line-height: 1.5; color: #78350f;">
+                        </div>
+                        <div style="margin-top: 6px; font-size: 0.8rem; color: #b45309; font-style: italic;">
+                            Please review attendance in the Attendance page before finalizing wages.
+                        </div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('calcAttendanceWarning').style.display='none'" style="background: none; border: none; color: #92400e; cursor: pointer; font-size: 1.25rem; line-height: 1; padding: 0 4px;" title="Dismiss Warning">&times;</button>
+                </div>
+            </div>
+
             <div class="calc-controls-container">
                 <!-- Left Side: Dropdowns and Wage Input -->
                 <div class="calc-left-group">
@@ -589,7 +607,57 @@
             category.focus();
         });
 
+        function checkCalcAttendanceCompleteness() {
+            if (!year || !month || year.value === "" || month.value === "") return;
+            const yearVal = parseInt(year.value);
+            const monthVal = parseInt(month.value);
+            const catVal = category ? category.value : "";
+            const contractSelect = document.getElementById("contract");
+            const cpId = contractSelect && contractSelect.value ? parseInt(contractSelect.value) : null;
+
+            fetch('Calculation.aspx/CheckAttendanceCompleteness', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ year: yearVal, month: monthVal, category: catVal, contractPeriodId: cpId })
+            })
+            .then(r => r.json())
+            .then(res => {
+                const data = JSON.parse(res.d || "{}");
+                const warnEl = document.getElementById("calcAttendanceWarning");
+                if (!warnEl) return;
+
+                if (data.HasIncomplete) {
+                    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                    const monthName = months[monthVal] || "";
+                    document.getElementById("calcWarningTitle").textContent = `Attendance Warning: Incomplete Records for ${monthName} ${yearVal}`;
+
+                    let html = '<ul style="margin: 0; padding-left: 20px; list-style-type: disc;">';
+                    if (data.MissingCount > 0) {
+                        const eg = (data.MissingExamples && data.MissingExamples.length) ? ` <span style="font-size:0.8rem; color:#92400e;">(e.g. ${data.MissingExamples.join(', ')})</span>` : '';
+                        html += `<li><strong>${data.MissingCount} day(s)</strong> have no attendance entered${eg}.</li>`;
+                    }
+                    if (data.UnspecifiedZeroCount > 0) {
+                        const eg = (data.UnspecifiedZeroExamples && data.UnspecifiedZeroExamples.length) ? ` <span style="font-size:0.8rem; color:#92400e;">(e.g. ${data.UnspecifiedZeroExamples.join(', ')})</span>` : '';
+                        html += `<li><strong>${data.UnspecifiedZeroCount} absent (0) day(s)</strong> have neither Paid nor Unpaid specified${eg}.</li>`;
+                    }
+                    if (data.PendingPairingCount > 0) {
+                        const eg = (data.PendingPairingExamples && data.PendingPairingExamples.length) ? ` <span style="font-size:0.8rem; color:#92400e;">(e.g. ${data.PendingPairingExamples.join(', ')})</span>` : '';
+                        html += `<li><strong>${data.PendingPairingCount} half-day pairing(s)</strong> are pending classification (not marked as Paired Paid or Paired Unpaid)${eg}.</li>`;
+                    }
+                    html += '</ul>';
+                    document.getElementById("calcWarningDetails").innerHTML = html;
+                    warnEl.style.display = "block";
+                } else {
+                    warnEl.style.display = "none";
+                }
+            })
+            .catch(err => {
+                console.error("Error checking calculation attendance completeness:", err);
+            });
+        }
+
         function onSelectionChange(isDivisionOrWageChange) {
+            checkCalcAttendanceCompleteness();
             if (isDivisionOrWageChange) {
                 const contractSelect = document.getElementById("contract");
                 const selectedCpId = contractSelect && contractSelect.value ? parseInt(contractSelect.value) : null;
