@@ -528,7 +528,7 @@
             overflow-x: auto;
             display: flex;
             justify-content: center;
-            padding-bottom: 40px;
+            padding: 0 18px 40px 18px;
         }
 
         .landscape-sheet {
@@ -538,7 +538,7 @@
             border: 1px solid #e2e8f0;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
             border-radius: 6px;
-            padding: 36px 44px;
+            padding: 36px 54px;
             box-sizing: border-box;
             font-family: Arial, sans-serif !important;
             color: #000000 !important;
@@ -870,7 +870,8 @@
             }
 
             html.theme-dark .rep-table td.col-cat,
-            html.theme-dark .rep-table td.col-manpower {
+            html.theme-dark .rep-table td.col-manpower,
+            html.theme-dark .rep-table td.col-cat-manpower {
                 background-color: #161922 !important;
                 color: #f1f5f9 !important;
             }
@@ -901,7 +902,7 @@
         @media print {
             @page {
                 size: landscape;
-                margin: 8mm 10mm 8mm 10mm;
+                margin: 8mm 12mm 8mm 12mm;
             }
 
             html,
@@ -1018,6 +1019,15 @@
                 color: #000000 !important;
             }
 
+            .rep-top-line1,
+            .rep-top-line2,
+            .rep-directorate-line {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+
             .landscape-viewport {
                 padding: 0 !important;
                 margin: 0 !important;
@@ -1027,6 +1037,8 @@
                 min-height: auto !important;
                 background: #ffffff !important;
                 background-color: #ffffff !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
             }
 
             .landscape-sheet {
@@ -1040,6 +1052,9 @@
                 min-height: auto !important;
                 background: #ffffff !important;
                 background-color: #ffffff !important;
+                display: block !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
             }
 
             .cell-inline-date {
@@ -1047,7 +1062,10 @@
             }
 
             .rep-table {
-                page-break-inside: auto;
+                page-break-before: auto !important;
+                break-before: auto !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
                 background-color: #ffffff !important;
                 border: 0.5pt solid #000000 !important;
                 width: 100% !important;
@@ -1066,21 +1084,40 @@
                 background-color: #ffffff !important;
             }
 
+            .rep-table thead {
+                display: table-header-group !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+
+            .rep-table tbody {
+                display: table-row-group !important;
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+            }
+
             .rep-table tr {
-                page-break-inside: avoid;
-                page-break-after: auto;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: auto !important;
+                break-after: auto !important;
                 background-color: #ffffff !important;
             }
 
-            .rep-table thead {
-                display: table-header-group;
+            .rep-cert-paragraph,
+            .rep-signatures-wrap,
+            .rep-to-block {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
     </style>
 </asp:Content>
 
 <asp:Content ID="Content3" ContentPlaceHolderID="MainContent" runat="server">
-    <div class="container-fluid p-0">
+    <div class="container-fluid" style="padding: 0 16px;">
         
         <!-- NON-PRINTING ACTION TOOLBAR -->
         <div class="report-toolbar-card no-print">
@@ -1112,8 +1149,7 @@
                                 <span class="font-weight-bold col-dropdown-title" style="font-size: 0.8rem;">Column Visibility</span>
                                 <button type="button" class="btn btn-link btn-sm p-0 font-weight-bold" style="font-size: 0.75rem;" onclick="resetAllColumns()">Show All</button>
                             </div>
-                            <label class="col-item-label"><input type="checkbox" id="chk_col-cat" checked onchange="toggleCol('col-cat', this.checked)" /> <span>Category</span></label>
-                            <label class="col-item-label"><input type="checkbox" id="chk_col-manpower" checked onchange="toggleCol('col-manpower', this.checked)" /> <span>Manpower</span></label>
+                            <label class="col-item-label"><input type="checkbox" id="chk_col-cat-manpower" checked onchange="toggleCol('col-cat-manpower', this.checked)" /> <span>Category / Manpower</span></label>
                             <label class="col-item-label"><input type="checkbox" id="chk_col-id" checked onchange="toggleCol('col-id', this.checked)" /> <span>ID No.</span></label>
                             <label class="col-item-label"><input type="checkbox" id="chk_col-name" checked onchange="toggleCol('col-name', this.checked)" /> <span>Name of the Individual</span></label>
                             <label class="col-item-label"><input type="checkbox" id="chk_col-attended" checked onchange="toggleCol('col-attended', this.checked)" /> <span>Total man days attended</span></label>
@@ -1254,25 +1290,24 @@
                     Directorate: D-KRM
                 </div>
 
-                <!-- 10-COLUMN REPORT TABLE -->
+                <!-- 9-COLUMN REPORT TABLE -->
                 <table class="rep-table" id="reportTable">
                     <thead>
                         <tr>
-                            <th class="col-cat" style="width: 9%;">Category</th>
-                            <th class="col-manpower" style="width: 9%;">Manpower</th>
+                            <th class="col-cat-manpower" style="width: 12%;">Category / Manpower</th>
                             <th class="col-id" style="width: 6%;">ID No.</th>
-                            <th class="col-name" style="width: 16%;">Name of the Individual</th>
-                            <th class="col-attended" style="width: 9%;">Total no. of man days attended <i class="fas fa-info-circle text-primary no-print ml-1" style="font-size: 0.8rem; cursor: help;" title="Notice: Total attended days counts only actual working days attended; it does not include public holidays, paid leave, or weekly offs."></i></th>
+                            <th class="col-name" style="width: 18%;">Name of the Individual</th>
+                            <th class="col-attended" style="width: 8%;">Total no. of man days attended <i class="fas fa-info-circle text-primary no-print ml-1" style="font-size: 0.8rem; cursor: help;" title="Notice: Total attended days counts only actual working days attended; it does not include public holidays, paid leave, or weekly offs."></i></th>
                             <th class="col-not-attended" style="width: 8%;">Total no. of days not attended</th>
-                            <th class="col-remarks" style="width: 18%;">Remarks</th>
-                            <th class="col-salary-date" id="thSalaryDate" style="width: 9%;">Received date of Previous Month<br />Salary<br /><span id="lblPrevMonSalary">( May)</span></th>
-                            <th class="col-epf-date" id="thEpfDate" style="width: 9%;">Received date of Previous Month EPF Contribution<br /><span id="lblPrevMonEpf">( May)</span></th>
-                            <th class="col-sig" style="width: 7%;">Signature of the Individual</th>
+                            <th class="col-remarks" style="width: 19%;">Remarks</th>
+                            <th class="col-salary-date" id="thSalaryDate" style="width: 9.5%;">Received date of Previous Month<br />Salary<br /><span id="lblPrevMonSalary">( May)</span></th>
+                            <th class="col-epf-date" id="thEpfDate" style="width: 9.5%;">Received date of Previous Month EPF Contribution<br /><span id="lblPrevMonEpf">( May)</span></th>
+                            <th class="col-sig" style="width: 10%;">Signature of the Individual</th>
                         </tr>
                     </thead>
                     <tbody id="reportTableBody">
                         <tr>
-                            <td colspan="10" style="padding: 30px; color: #64748b;">
+                            <td colspan="9" style="padding: 30px; color: #64748b;">
                                 <i class="fas fa-spinner fa-spin mr-2"></i> Loading report data...
                             </td>
                         </tr>
@@ -1311,8 +1346,7 @@
         let currentReportData = null;
         let isUserPoc = false;
         let columnVisibility = {
-            'col-cat': true,
-            'col-manpower': true,
+            'col-cat-manpower': true,
             'col-id': true,
             'col-name': true,
             'col-attended': true,
@@ -1714,7 +1748,7 @@
             if (!year || !month || !tierId) return;
 
             const tbody = document.getElementById('reportTableBody');
-            tbody.innerHTML = `<tr><td colspan="10" style="padding: 35px; color: #64748b;"><i class="fas fa-spinner fa-spin mr-2"></i> Generating report data...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="padding: 35px; color: #64748b;"><i class="fas fa-spinner fa-spin mr-2"></i> Generating report data...</td></tr>`;
 
             fetch('MonthlyAttendanceReport.aspx/GetReportData', {
                 method: 'POST',
@@ -1725,7 +1759,7 @@
             .then(res => {
                 const data = JSON.parse(res.d || "{}");
                 if (data.status === "error") {
-                    tbody.innerHTML = `<tr><td colspan="10" style="padding: 25px; color: #ef4444;"><i class="fas fa-exclamation-triangle mr-2"></i> ${data.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="padding: 25px; color: #ef4444;"><i class="fas fa-exclamation-triangle mr-2"></i> ${data.message}</td></tr>`;
                     return;
                 }
 
@@ -1733,7 +1767,7 @@
                 renderReportView(data);
             })
             .catch(err => {
-                tbody.innerHTML = `<tr><td colspan="10" style="padding: 25px; color: #ef4444;">Failed to load attendance report.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="padding: 25px; color: #ef4444;">Failed to load attendance report.</td></tr>`;
             });
         }
 
@@ -1767,35 +1801,43 @@
             // 6. Signatures & Recipient Block (dynamically rendered from template)
             renderSignaturesAndRecipient(data.Signatures, data.Directorate, data.BottomFontSize, data.BottomAlign);
 
-            // 7. Render Table Rows with Merged Category & Manpower Cells
+            // 7. Render Table Rows with Merged Category / Manpower Cell
             const tbody = document.getElementById('reportTableBody');
             tbody.innerHTML = '';
 
             const emps = data.Employees || [];
             if (emps.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" style="padding: 30px; color: #94a3b8;"><i class="fas fa-info-circle mr-2"></i> No active employees found for this category and division during the selected month.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="padding: 30px; color: #94a3b8;"><i class="fas fa-info-circle mr-2"></i> No active employees found for this category and division during the selected month.</td></tr>`;
                 return;
             }
 
             const masterSalaryDate = document.getElementById('txtMasterSalaryDate').value || "";
             const masterEpfDate = document.getElementById('txtMasterEpfDate').value || "";
 
+            let catText = (data.CategoryName || '').trim();
+            let manText = (data.ManpowerDesc || '').trim();
+            let displayText = '';
+
+            if (catText && manText) {
+                if (catText.toLowerCase() === manText.toLowerCase()) {
+                    displayText = catText;
+                } else {
+                    displayText = catText + ' / ' + manText;
+                }
+            } else {
+                displayText = catText || manText || '';
+            }
+
             emps.forEach((emp, index) => {
                 const tr = document.createElement('tr');
 
-                // If first row, render merged Category & Manpower cells spanning all rows
+                // If first row, render merged Category / Manpower cell spanning all rows
                 if (index === 0) {
-                    const tdCat = document.createElement('td');
-                    tdCat.className = 'col-cat cell-center cell-bold';
-                    tdCat.rowSpan = emps.length;
-                    tdCat.textContent = data.CategoryName;
-                    tr.appendChild(tdCat);
-
-                    const tdMan = document.createElement('td');
-                    tdMan.className = 'col-manpower cell-center cell-bold';
-                    tdMan.rowSpan = emps.length;
-                    tdMan.textContent = data.ManpowerDesc;
-                    tr.appendChild(tdMan);
+                    const tdCatMan = document.createElement('td');
+                    tdCatMan.className = 'col-cat-manpower cell-center cell-bold';
+                    tdCatMan.rowSpan = emps.length;
+                    tdCatMan.textContent = displayText;
+                    tr.appendChild(tdCatMan);
                 }
 
                 // ID No.
@@ -2018,7 +2060,7 @@
 @page Section1 {
   size: 11.69in 8.27in;
   mso-page-orientation: landscape;
-  margin: 0.3in 0.4in 0.3in 0.4in;
+  margin: 0.3in 0.5in 0.3in 0.5in;
   mso-header-margin: 0.15in;
   mso-footer-margin: 0.15in;
 }

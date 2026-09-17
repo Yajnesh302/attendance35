@@ -3,7 +3,15 @@
   "WorkspaceRootPath": "E:\\attendence\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|e:\\attendence\\ledger.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|E:\\attendence\\utils\\adhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|solutionrelative:utils\\adhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|e:\\attendence\\monthlyattendancereport.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}",
+      "RelativeMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|solutionrelative:monthlyattendancereport.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|E:\\attendence\\ledger.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|solutionrelative:ledger.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -21,10 +29,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|E:\\attendence\\dashboard.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|solutionrelative:dashboard.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|E:\\attendence\\utils\\adhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|solutionrelative:utils\\adhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A3D73A90-A88E-454E-8C9B-C57E8AE4BBE4}|AttendanceApp.csproj|E:\\attendence\\attendance.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}",
@@ -46,11 +50,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
+              "Title": "MonthlyAttendanceReport.aspx",
+              "DocumentMoniker": "E:\\attendence\\MonthlyAttendanceReport.aspx",
+              "RelativeDocumentMoniker": "MonthlyAttendanceReport.aspx",
+              "ToolTip": "E:\\attendence\\MonthlyAttendanceReport.aspx",
+              "RelativeToolTip": "MonthlyAttendanceReport.aspx",
+              "LogicalView": "7651a703-06e5-11d1-8ebd-00a0c90f26ea",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000195|",
+              "WhenOpened": "2026-09-16T13:08:03.42Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Ledger.aspx.cs",
               "DocumentMoniker": "E:\\attendence\\Ledger.aspx.cs",
               "RelativeDocumentMoniker": "Ledger.aspx.cs",
@@ -58,12 +75,11 @@
               "RelativeToolTip": "Ledger.aspx.cs",
               "ViewState": "AgIAAPwBAAAAAAAAAAAuwBACAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-04T13:20:21.012Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-04T13:20:21.012Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "Documents.aspx",
               "DocumentMoniker": "E:\\attendence\\Documents.aspx",
               "RelativeDocumentMoniker": "Documents.aspx",
@@ -75,7 +91,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "Attendance.aspx",
               "DocumentMoniker": "E:\\attendence\\Attendance.aspx",
               "RelativeDocumentMoniker": "Attendance.aspx",
@@ -87,19 +103,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 0,
               "Title": "ADHelper.cs",
               "DocumentMoniker": "E:\\attendence\\Utils\\ADHelper.cs",
               "RelativeDocumentMoniker": "Utils\\ADHelper.cs",
               "ToolTip": "E:\\attendence\\Utils\\ADHelper.cs",
               "RelativeToolTip": "Utils\\ADHelper.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAAAiwCcAAAATAAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAACcAAAATAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-30T13:53:26.677Z"
+              "WhenOpened": "2026-07-30T13:53:26.677Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "Documents.aspx.cs",
               "DocumentMoniker": "E:\\attendence\\Documents.aspx.cs",
               "RelativeDocumentMoniker": "Documents.aspx.cs",
@@ -111,7 +128,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "DBHelper.cs",
               "DocumentMoniker": "E:\\attendence\\Utils\\DBHelper.cs",
               "RelativeDocumentMoniker": "Utils\\DBHelper.cs",
@@ -123,7 +140,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "Settings.aspx",
               "DocumentMoniker": "E:\\attendence\\Settings.aspx",
               "RelativeDocumentMoniker": "Settings.aspx",
@@ -135,7 +152,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "Dashboard.aspx.cs",
               "DocumentMoniker": "E:\\attendence\\Dashboard.aspx.cs",
               "RelativeDocumentMoniker": "Dashboard.aspx.cs",
@@ -147,7 +164,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "Web.config",
               "DocumentMoniker": "E:\\attendence\\Web.config",
               "RelativeDocumentMoniker": "Web.config",
@@ -155,7 +172,8 @@
               "RelativeToolTip": "Web.config",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000601|",
-              "WhenOpened": "2026-06-03T16:08:49.154Z"
+              "WhenOpened": "2026-06-03T16:08:49.154Z",
+              "EditorCaption": ""
             }
           ]
         }

@@ -2227,7 +2227,8 @@ html.theme-dark .report-hub-card:hover .report-card-footer-action {
     }
 
     html.theme-dark .rep-table td.col-cat,
-    html.theme-dark .rep-table td.col-manpower {
+    html.theme-dark .rep-table td.col-manpower,
+    html.theme-dark .rep-table td.col-cat-manpower {
         background-color: #161922 !important;
         color: #f1f5f9 !important;
     }

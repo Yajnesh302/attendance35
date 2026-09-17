@@ -63,11 +63,11 @@ namespace AttendanceApp
             sb.AppendLine("<![endif]-->");
             sb.AppendLine("<style>");
             sb.AppendLine("@page Section1 {");
-            sb.AppendLine("  size: 11.0in 8.5in;");
+            sb.AppendLine("  size: 11.69in 8.27in;");
             sb.AppendLine("  mso-page-orientation: landscape;");
-            sb.AppendLine("  margin: 0.4in 0.8in 0.6in 0.8in;");
-            sb.AppendLine("  mso-header-margin: 0.4in;");
-            sb.AppendLine("  mso-footer-margin: 0.4in;");
+            sb.AppendLine("  margin: 0.3in 0.55in 0.3in 0.55in;");
+            sb.AppendLine("  mso-header-margin: 0.15in;");
+            sb.AppendLine("  mso-footer-margin: 0.15in;");
             sb.AppendLine("}");
             sb.AppendLine("div.Section1 { page: Section1; }");
             sb.AppendLine("body { font-family: Arial, sans-serif; font-size: 11pt; color: #000000; margin: 0; padding: 0; }");
