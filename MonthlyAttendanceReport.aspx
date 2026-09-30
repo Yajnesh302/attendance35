@@ -1406,7 +1406,7 @@
                 const mSelect = document.getElementById('ddlMonth');
                 mSelect.value = data.CurrentMonth;
 
-                // Pre-fill suggested Salary & EPF dates (4th and 14th of the report month)
+                // Keep Salary & EPF dates blank by default
                 updateDefaultMasterDates(curY, data.CurrentMonth);
 
                 // Populate Categories
@@ -1542,12 +1542,10 @@
         }
 
         function updateDefaultMasterDates(year, month) {
-            const yStr = String(year);
-            const mStr = String(month).padStart(2, '0');
             const txtSal = document.getElementById('txtMasterSalaryDate');
             const txtEpf = document.getElementById('txtMasterEpfDate');
-            if (txtSal) txtSal.value = `${yStr}-${mStr}-04`;
-            if (txtEpf) txtEpf.value = `${yStr}-${mStr}-14`;
+            if (txtSal) txtSal.value = '';
+            if (txtEpf) txtEpf.value = '';
         }
 
         function formatDateToDDMMYYYY(val) {

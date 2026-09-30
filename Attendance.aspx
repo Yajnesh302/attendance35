@@ -1043,14 +1043,14 @@
     <div class="alert attendance-mode-banner attendance-mode-poc mb-3 d-flex align-items-center justify-content-between shadow-sm">
         <div class="attendance-mode-content">
             <i class="fas fa-user-shield mr-2 mode-icon"></i>
-            <strong>POC Review Mode:</strong> <span class="mode-text">Empty boxes are reserved for Sub User data entry. You can review, edit existing entered values (draft/live) with remarks, and submit drafts. To enter initial data into empty boxes, please switch to <strong>Sub User</strong> mode from the top-right Active Mode dropdown.</span>
+            <strong>POC Review Mode:</strong> <span class="mode-text">Empty boxes are reserved for Sub User data entry. You can review, edit existing entered values (draft/main) with remarks, and submit drafts. To enter initial data into empty boxes, please switch to <strong>Sub User</strong> mode from the top-right Active Mode dropdown.</span>
         </div>
     </div>
     <% } else if (sessionRole == 6 || sessionRoleMode == "SubUser") { %>
     <div class="alert attendance-mode-banner attendance-mode-subuser mb-3 d-flex align-items-center justify-content-between shadow-sm">
         <div class="attendance-mode-content">
             <i class="fas fa-file-signature mr-2 mode-icon"></i>
-            <strong>Sub User Mode:</strong> <span class="mode-text">Enter monthly attendance values into empty boxes and click <strong>Save Draft</strong>. Submitted live attendance records are locked.</span>
+            <strong>Sub User Mode:</strong> <span class="mode-text">Enter monthly attendance values into empty boxes and click <strong>Save Draft</strong>. Submitted main attendance records are locked.</span>
         </div>
     </div>
     <% } %>
@@ -3404,7 +3404,7 @@
             if (window.showSuperAdminDrafts) {
                 showToast("Draft View Active: Showing unsubmitted drafts (Read-Only).", "warning");
             } else {
-                showToast("Live View Active: Drafts hidden. You can enter & edit live attendance.", "info");
+                showToast("Main View Active: Drafts hidden. You can enter & edit main attendance.", "info");
             }
             
             updateRoleToolbarUI();
@@ -3440,7 +3440,7 @@
             }
 
             Swal.fire({
-                title: '<span class="swal-title-submit"><i class="fas fa-paper-plane mr-2"></i>Submit Attendance to Live?</span>',
+                title: '<span class="swal-title-submit"><i class="fas fa-paper-plane mr-2"></i>Submit Attendance to Main Record?</span>',
                 html: `
                     <div style="text-align: left; padding: 4px 10px;">
                         <p class="swal-submit-lead">
@@ -3451,7 +3451,7 @@
                                 <i class="fas fa-info-circle mr-1"></i> <strong>What happens when you submit:</strong>
                             </div>
                             <ul class="swal-submit-list">
-                                <li>Records will be committed directly to the live attendance system.</li>
+                                <li>Records will be committed directly to the main attendance system.</li>
                                 <li>Data will become instantly available for calculations, reports, and Admin.</li>
                                 <li>Cells will become locked/read-only for Sub Users.</li>
                             </ul>
@@ -3463,7 +3463,7 @@
                 `,
                 icon: undefined,
                 showCancelButton: true,
-                confirmButtonText: '<i class="fas fa-check-circle mr-1"></i> Yes, Submit Live',
+                confirmButtonText: '<i class="fas fa-check-circle mr-1"></i> Yes, Submit',
                 cancelButtonText: '<i class="fas fa-times mr-1"></i> Cancel',
                 confirmButtonColor: '#059669',
                 cancelButtonColor: '#64748b',
@@ -3471,7 +3471,7 @@
                 reverseButtons: true
             }).then(result => {
                 if (result.isConfirmed) {
-                    showLoading("Submitting Attendance to Live...");
+                    showLoading("Submitting Attendance to Main Record...");
                     const visibleEmpIds = (typeof employees !== 'undefined' && Array.isArray(employees)) 
                         ? employees.map(e => e.MasterId) 
                         : [];
@@ -3834,6 +3834,30 @@
             const y = (typeof saveYear === 'number') ? saveYear : parseInt(yS.value);
             const m = (typeof saveMonth === 'number') ? saveMonth : parseInt(mS.value);
 
+            // Recalculate Saturday values for all employees to ensure consistency before saving
+            employees.forEach(emp => {
+                if (emp && emp.MasterId) {
+                    calcSat(emp.MasterId, true);
+                }
+            });
+
+            if (isSubUser) {
+                for (let empId in attendanceData) {
+                    const empCells = attendanceData[empId];
+                    for (let dKey in empCells) {
+                        const dayNum = parseInt(dKey);
+                        const isSat = (new Date(y, m, dayNum).getDay() === 6);
+                        if (!isSat && empCells[dKey] && empCells[dKey].Val !== null && empCells[dKey].Val !== undefined && !empCells[dKey].Holiday) {
+                            const liveCell = window.liveAttendanceData?.[empId]?.[dKey];
+                            const isLiveSubmitted = liveCell && ((liveCell.Val !== null && liveCell.Val !== undefined) || (liveCell.Leave && liveCell.Leave.trim() !== "") || liveCell.Holiday);
+                            if (!isLiveSubmitted) {
+                                empCells[dKey].IsDraft = true;
+                            }
+                        }
+                    }
+                }
+            }
+
             const req = {
                 year: y,
                 month: m,
@@ -3868,7 +3892,9 @@
                     for (let empId in attendanceData) {
                         const empCells = attendanceData[empId];
                         for (let dKey in empCells) {
-                            if (empCells[dKey] && empCells[dKey].Val !== null && empCells[dKey].Val !== undefined && !empCells[dKey].Holiday) {
+                            const dayNum = parseInt(dKey);
+                            const isSat = (new Date(y, m, dayNum).getDay() === 6);
+                            if (!isSat && empCells[dKey] && empCells[dKey].Val !== null && empCells[dKey].Val !== undefined && !empCells[dKey].Holiday) {
                                 if (empCells[dKey].IsDraft !== false) {
                                     empCells[dKey].IsDraft = true;
                                 }
@@ -4138,7 +4164,7 @@
                     const hasCellContent = (cell.Val !== null && cell.Val !== undefined && cell.Val !== "") || 
                                            (cell.Leave && cell.Leave.trim() !== "") || 
                                            (cell.Remarks && cell.Remarks.trim() !== "");
-                    if (cell && cell.IsDraft === true && !cell.Holiday && hasCellContent) {
+                    if (!isSatCell && cell && cell.IsDraft === true && !cell.Holiday && hasCellContent) {
                         tdClass += " is-draft-cell";
                         let draftEnteredText = cell.EnteredBy ? `Entered by ${cell.EnteredBy}${cell.EnteredAt ? ' on ' + cell.EnteredAt : ''}` : 'Draft attendance awaiting POC review and submission';
                         remarksAttr += ` data-draft-info="${draftEnteredText.replace(/"/g, '&quot;')}"`;
@@ -4430,7 +4456,7 @@
 
                             // Check employee engagement bounds
                             let cStr = `${c.getFullYear()}-${String(c.getMonth() + 1).padStart(2, '0')}-${String(c.getDate()).padStart(2, '0')}`;
-                             let isOutOfBoundsWeek = !empEngagements.find(ee => ee.StartDate <= cStr && (!ee.EndDate || cStr <= ee.EndDate));
+                            let isOutOfBoundsWeek = !empEngagements.find(ee => ee.StartDate <= cStr && (!ee.EndDate || cStr <= ee.EndDate));
                             if (isOutOfBoundsWeek) {
                                 continue; // Out of bounds, skip checking (ignored, does not penalize Saturday)
                             }
@@ -4612,7 +4638,8 @@
                 const hasCellContent = (cell.Val !== null && cell.Val !== undefined && cell.Val !== "") || 
                                        (cell.Leave && cell.Leave.trim() !== "") || 
                                        (cell.Remarks && cell.Remarks.trim() !== "");
-                if (cell && cell.IsDraft === true && !cell.Holiday && hasCellContent) {
+                const isSatCell = (d.getDay() === 6);
+                if (!isSatCell && cell && cell.IsDraft === true && !cell.Holiday && hasCellContent) {
                     cls = (cls ? cls + " " : "") + "is-draft-cell";
                     let draftEnteredText = cell.EnteredBy ? `Entered by ${cell.EnteredBy}${cell.EnteredAt ? ' on ' + cell.EnteredAt : ''}` : 'Draft attendance awaiting POC review and submission';
                     td.setAttribute("data-draft-info", draftEnteredText);
@@ -4702,7 +4729,6 @@
                 let dropHtml = "";
 
                 const isAdminUser2 = (parseInt(role) === 1 || parseInt(role) === 4);
-                const isSatCell = (d.getDay() === 6);
 
                 if (!isOutOfBounds && !cell.Holiday && !state.isReadonlyCell && isAdminUser2) {
                     if (cell.Leave === "Carried" || cell.Leave === "Paired Paid" || cell.Leave === "Paired Unpaid") {
@@ -4843,7 +4869,7 @@
                     event.target.value = (attendanceData[id]?.[day]?.Val !== null && attendanceData[id]?.[day]?.Val !== undefined) ? attendanceData[id][day].Val : "";
                 }
                 if (isSuperAdmin && window.showSuperAdminDrafts && attendanceData[id]?.[day]?.IsDraft === true) {
-                    showToast("Draft View: Draft cells cannot be edited by Super Admin. Hide drafts to enter live attendance.", "warning");
+                    showToast("Draft View: Draft cells cannot be edited by Super Admin. Hide drafts to enter main attendance.", "warning");
                 } else if (isSubUser && attendanceData[id]?.[day]?.IsDraft === false) {
                     showToast("Submitted attendance cannot be edited by Sub Users.", "warning");
                 } else if (isPocMode && !hadEnteredVal) {

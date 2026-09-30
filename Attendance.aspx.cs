@@ -896,13 +896,17 @@ namespace AttendanceApp
                                 var valProp = existingObj.GetType().GetProperty("Val");
                                 var holProp = existingObj.GetType().GetProperty("Holiday");
                                 var leaveProp = existingObj.GetType().GetProperty("Leave");
+                                var autoSatProp = existingObj.GetType().GetProperty("AutoSat");
 
                                 object existingVal = valProp != null ? valProp.GetValue(existingObj) : null;
                                 bool existingHol = holProp != null && (bool)holProp.GetValue(existingObj);
                                 string existingLeave = leaveProp != null ? (leaveProp.GetValue(existingObj) as string) : "";
+                                bool existingAutoSat = autoSatProp != null && (bool)autoSatProp.GetValue(existingObj);
 
                                 // If the main Attendance table has a saved status (Val != null, Leave, or Holiday):
-                                if (existingVal != null || existingHol || (!string.IsNullOrEmpty(existingLeave) && existingLeave.Trim() != ""))
+                                // NOTE: Automated Saturday records (existingAutoSat == true) are system calculations,
+                                // not manual live entries, so they must yield to the draft calculation in AttendanceDraft.
+                                if (!existingAutoSat && (existingVal != null || existingHol || (!string.IsNullOrEmpty(existingLeave) && existingLeave.Trim() != "")))
                                 {
                                     hasLiveRecord = true;
                                 }
@@ -914,13 +918,16 @@ namespace AttendanceApp
                                 continue; // Preserve live entry intact; ignore any obsolete draft for this cell
                             }
 
+                            DateTime cellDt = new DateTime(year, month + 1, day);
+                            bool isSatDay = (cellDt.DayOfWeek == DayOfWeek.Saturday);
+
                             var draftCellObj = new { 
                                 Val = val, 
                                 Holiday = false, 
                                 Leave = leave, 
                                 AutoSat = autoSat, 
                                 Remarks = remarks,
-                                IsDraft = true,
+                                IsDraft = !isSatDay,
                                 EnteredBy = enteredBy,
                                 EnteredAt = enteredAt,
                                 LastEditedBy = lastEditedBy,
@@ -1197,9 +1204,12 @@ namespace AttendanceApp
                         if (roleMode == "SubUser")
                         {
                             // 1. Guard against modifying cells that already have submitted live attendance or holidays
+                            // Exclude automated Saturday calculations (AutoSat = 1) so Sub Users can draft attendance for the week
                             string liveCheckSql = @"
                                 SELECT EmpID, Day FROM Attendance 
-                                WHERE Year = :Year AND Month = :Month AND (StatusValue IS NOT NULL OR IsHoliday = 1)";
+                                WHERE Year = :Year AND Month = :Month 
+                                  AND (StatusValue IS NOT NULL OR IsHoliday = 1)
+                                  AND (AutoSat = 0 OR AutoSat IS NULL)";
                             HashSet<string> liveSubmittedCells = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                             using (OracleCommand chkCmd = new OracleCommand(liveCheckSql, conn))
                             {
@@ -1319,9 +1329,15 @@ namespace AttendanceApp
                                             try
                                             {
                                                 DateTime checkDate = new DateTime(year, month + 1, day);
+                                                bool isSat = (checkDate.DayOfWeek == DayOfWeek.Saturday);
+                                                // If Saturday, allow drafting as long as Monday of that week has arrived (or is within editing scope),
+                                                // even mid-week before Friday arrives.
+                                                DateTime weekStart = isSat ? checkDate.AddDays(-5) : checkDate;
+
                                                 if (editMode == 1)
                                                 {
-                                                    if (checkDate > today || checkDate.Year != today.Year || checkDate.Month != today.Month) continue;
+                                                    bool isFuture = isSat ? (weekStart > today) : (checkDate > today);
+                                                    if (isFuture || checkDate.Year != today.Year || checkDate.Month != today.Month) continue;
                                                 }
                                                 else if (editMode == 2)
                                                 {
@@ -1330,11 +1346,13 @@ namespace AttendanceApp
                                                     int graceCutoffDay = editDaysAllowed > 0 ? editDaysAllowed : 3;
                                                     bool isPrevMonthAllowed = (checkDate.Year == prevMonth.Year && checkDate.Month == prevMonth.Month && today.Day <= graceCutoffDay);
 
-                                                    if ((!isCurrentMonth && !isPrevMonthAllowed) || checkDate > today) continue;
+                                                    bool isFuture = isSat ? (weekStart > today) : (checkDate > today);
+                                                    if ((!isCurrentMonth && !isPrevMonthAllowed) || isFuture) continue;
                                                 }
                                                 else
                                                 {
-                                                    if (checkDate > today || checkDate < minAllowedDate) continue;
+                                                    bool isFuture = isSat ? (weekStart > today) : (checkDate > today);
+                                                    if (isFuture || checkDate < minAllowedDate) continue;
                                                 }
                                             }
                                             catch { continue; }
@@ -1434,7 +1452,7 @@ namespace AttendanceApp
                             }
 
                             // Check existing live cells (for POC validation)
-                            string liveCheckSql = "SELECT EmpID, Day FROM Attendance WHERE Year = :Year AND Month = :Month AND (StatusValue IS NOT NULL OR IsHoliday = 1)";
+                            string liveCheckSql = "SELECT EmpID, Day FROM Attendance WHERE Year = :Year AND Month = :Month AND (StatusValue IS NOT NULL OR IsHoliday = 1) AND (AutoSat = 0 OR AutoSat IS NULL)";
                             HashSet<string> liveExistingCells = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                             using (OracleCommand chkLiveCmd = new OracleCommand(liveCheckSql, conn))
                             {
@@ -1535,14 +1553,19 @@ namespace AttendanceApp
                                         int day = Convert.ToInt32(dayKvp.Key);
                                         string cellKey = empId + "_" + day;
                                         
+                                        bool isSat = false;
                                         if (role != 1 && role != 4)
                                         {
                                             try
-                                             {
+                                            {
                                                 DateTime checkDate = new DateTime(year, month + 1, day);
+                                                isSat = (checkDate.DayOfWeek == DayOfWeek.Saturday);
+                                                DateTime weekStart = isSat ? checkDate.AddDays(-5) : checkDate;
+
                                                 if (editMode == 1)
                                                 {
-                                                    if (checkDate > today || checkDate.Year != today.Year || checkDate.Month != today.Month) continue;
+                                                    bool isFuture = isSat ? (weekStart > today) : (checkDate > today);
+                                                    if (isFuture || checkDate.Year != today.Year || checkDate.Month != today.Month) continue;
                                                 }
                                                 else if (editMode == 2)
                                                 {
@@ -1551,11 +1574,13 @@ namespace AttendanceApp
                                                     int graceCutoffDay = editDaysAllowed > 0 ? editDaysAllowed : 3;
                                                     bool isPrevMonthAllowed = (checkDate.Year == prevMonth.Year && checkDate.Month == prevMonth.Month && today.Day <= graceCutoffDay);
 
-                                                    if ((!isCurrentMonth && !isPrevMonthAllowed) || checkDate > today) continue;
+                                                    bool isFuture = isSat ? (weekStart > today) : (checkDate > today);
+                                                    if ((!isCurrentMonth && !isPrevMonthAllowed) || isFuture) continue;
                                                 }
                                                 else
                                                 {
-                                                    if (checkDate > today || checkDate < minAllowedDate) continue;
+                                                    bool isFuture = isSat ? (weekStart > today) : (checkDate > today);
+                                                    if (isFuture || checkDate < minAllowedDate) continue;
                                                 }
                                             }
                                             catch { continue; }
@@ -1588,7 +1613,7 @@ namespace AttendanceApp
                                         {
                                             bool hadExistingDraft = draftExistingCells.Contains(cellKey);
                                             bool hadExistingLive = liveExistingCells.Contains(cellKey);
-                                            if (!hadExistingDraft && !hadExistingLive && !isHoliday)
+                                            if (!hadExistingDraft && !hadExistingLive && !isHoliday && !isSat)
                                             {
                                                 continue; // Skip brand new entry attempts by POC
                                             }
@@ -1813,12 +1838,12 @@ namespace AttendanceApp
 
             if (role == 1 || role == 4)
             {
-                return new JavaScriptSerializer().Serialize(new { status = "error", message = "Permission denied: Admins manage live attendance directly; draft submission is for Regular Users (POCs) only." });
+                return new JavaScriptSerializer().Serialize(new { status = "error", message = "Permission denied: Admins manage main attendance directly; draft submission is for Regular Users (POCs) only." });
             }
 
             if (roleMode == "SubUser")
             {
-                return new JavaScriptSerializer().Serialize(new { status = "error", message = "Permission denied: Sub Users cannot submit attendance to live. Please request your POC to review and submit." });
+                return new JavaScriptSerializer().Serialize(new { status = "error", message = "Permission denied: Sub Users cannot submit attendance to main. Please request your POC to review and submit." });
             }
 
             List<string> targetEmpIds = null;
@@ -1917,7 +1942,7 @@ namespace AttendanceApp
 
                         return new JavaScriptSerializer().Serialize(new { 
                             status = "success", 
-                            message = $"Successfully submitted {draftCount} attendance record{(draftCount == 1 ? "" : "s")} to the live system.",
+                            message = $"Successfully submitted {draftCount} attendance record{(draftCount == 1 ? "" : "s")}.",
                             submittedCount = draftCount 
                         });
                     }

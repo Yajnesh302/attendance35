@@ -1592,7 +1592,7 @@
 
                     <!-- Body Paragraph -->
                     <div id="covParagraph" class="cov-paragraph-wrap"
-                        style="margin-bottom: 50px; text-align: left; text-indent: 48px; line-height: 1.6;"
+                        style="margin-bottom: 50px; text-align: left; text-align: justify; text-indent: 48px; line-height: 1.6;"
                         contenteditable="true">
                         The copies of the Attendance report along with the wage calculation for skilled category
                         Contract Employees from M/s. Vishal Manpower & Security Consultants, Mangalore for the period of
