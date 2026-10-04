@@ -25,6 +25,7 @@ namespace AttendanceApp
             if (!IsPostBack)
             {
                 PopulateCategories();
+                PopulateDivisions();
                 PopulateYearAndMonthDropdowns();
                 PopulateContracts();
                 BindGrid();
@@ -300,6 +301,106 @@ namespace AttendanceApp
             }
         }
 
+        protected void ddlDivision_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindGrid();
+        }
+
+        private void PopulateDivisions()
+        {
+            try
+            {
+                int role = Convert.ToInt32(Session["Role"] ?? 0);
+                string pcno = Session["PCNO"]?.ToString() ?? "";
+                string selectedDiv = ddlDivision.SelectedValue;
+
+                ddlDivision.Items.Clear();
+
+                List<string> divisions = new List<string>();
+
+                if (role == 1 || role == 4)
+                {
+                    DataTable dt = DBHelper.GetCompanyDivisionsDataTable();
+                    if (dt != null)
+                    {
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            string divName = dr["Name"]?.ToString()?.Trim();
+                            if (!string.IsNullOrEmpty(divName) && !divisions.Contains(divName))
+                            {
+                                divisions.Add(divName);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var allowedDivs = Session["AllowedDivisions"] as List<string>;
+                    if (allowedDivs != null && allowedDivs.Count > 0)
+                    {
+                        foreach (string d in allowedDivs)
+                        {
+                            string divName = d?.Trim();
+                            if (!string.IsNullOrEmpty(divName) && !divisions.Contains(divName))
+                            {
+                                divisions.Add(divName);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        string query = "SELECT DivisionName FROM UserDivisions WHERE PCNO = :PCNO ORDER BY DivisionName ASC";
+                        DataTable dt = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), query, new OracleParameter("PCNO", pcno));
+                        if (dt != null)
+                        {
+                            foreach (DataRow dr in dt.Rows)
+                            {
+                                string divName = dr["DivisionName"]?.ToString()?.Trim();
+                                if (!string.IsNullOrEmpty(divName) && !divisions.Contains(divName))
+                                {
+                                    divisions.Add(divName);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                divisions.Sort(StringComparer.OrdinalIgnoreCase);
+
+                if (role == 1 || role == 4 || divisions.Count > 1)
+                {
+                    ddlDivision.Items.Add(new ListItem("All", "All"));
+                }
+
+                foreach (string d in divisions)
+                {
+                    ddlDivision.Items.Add(new ListItem(d, d));
+                }
+
+                if (!string.IsNullOrEmpty(selectedDiv) && ddlDivision.Items.FindByValue(selectedDiv) != null)
+                {
+                    ddlDivision.SelectedValue = selectedDiv;
+                }
+                else if (ddlDivision.Items.Count > 0)
+                {
+                    ddlDivision.SelectedIndex = 0;
+                }
+
+                if (role != 1 && role != 4 && divisions.Count <= 1)
+                {
+                    ddlDivision.Enabled = false;
+                }
+                else
+                {
+                    ddlDivision.Enabled = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Error populating divisions in Ledger: " + ex.Message);
+            }
+        }
+
         protected void btnGenerate_Click(object sender, EventArgs e)
         {
             BindGrid();
@@ -311,6 +412,7 @@ namespace AttendanceApp
             int tY = int.Parse(ddlYear.SelectedValue);
             int tM = int.Parse(ddlMonth.SelectedValue) - 1; // Convert 1-12 to 0-11 to match 0-indexed database Month
             string cat = ddlCategory.SelectedValue;
+            string selectedDivision = ddlDivision != null ? ddlDivision.SelectedValue : "All";
             string search = txtSearch.Text.Trim();
 
             lblLedgerMessage.Visible = false;
@@ -443,28 +545,62 @@ namespace AttendanceApp
                 }
             }
 
+            string deptField = selectedCpId.HasValue ? "e.Department" : "e.Department";
+
             if (role != 1 && role != 4)
             {
                 var allowedDivs = Session["AllowedDivisions"] as List<string>;
-                if (allowedDivs != null && allowedDivs.Count > 0)
+                if (allowedDivs == null || allowedDivs.Count == 0)
                 {
-                    List<string> divClauses = new List<string>();
-                    for (int i = 0; i < allowedDivs.Count; i++)
+                    string userPcno = Session["PCNO"]?.ToString() ?? "";
+                    string query = "SELECT DivisionName FROM UserDivisions WHERE PCNO = :PCNO";
+                    DataTable dtDivs = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), query, new OracleParameter("PCNO", userPcno));
+                    allowedDivs = new List<string>();
+                    foreach (DataRow dr in dtDivs.Rows)
                     {
-                        string paramName = "Div" + i;
-                        string deptField = selectedCpId.HasValue ? "e.Department" : "Department";
-                        divClauses.Add(deptField + " LIKE :" + paramName);
-                        empParams.Add(new OracleParameter(paramName, allowedDivs[i] + "%"));
+                        allowedDivs.Add(dr["DivisionName"].ToString());
                     }
-                    empQuery += " AND (" + string.Join(" OR ", divClauses) + ")";
+                    Session["AllowedDivisions"] = allowedDivs;
+                }
+
+                if (allowedDivs != null && !string.IsNullOrEmpty(selectedDivision) && selectedDivision != "All" && allowedDivs.Contains(selectedDivision))
+                {
+                    empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                    empParams.Add(new OracleParameter("Div", selectedDivision));
+                    empParams.Add(new OracleParameter("DivLike", selectedDivision + "%"));
                 }
                 else
                 {
-                    empQuery += " AND 1=0";
+                    if (allowedDivs != null && allowedDivs.Count > 0)
+                    {
+                        List<string> divClauses = new List<string>();
+                        for (int i = 0; i < allowedDivs.Count; i++)
+                        {
+                            string paramName = "Div" + i;
+                            divClauses.Add("(" + deptField + " = :" + paramName + " OR " + deptField + " LIKE :" + paramName + "Like)");
+                            empParams.Add(new OracleParameter(paramName, allowedDivs[i]));
+                            empParams.Add(new OracleParameter(paramName + "Like", allowedDivs[i] + "%"));
+                        }
+                        empQuery += " AND (" + string.Join(" OR ", divClauses) + ")";
+                    }
+                    else
+                    {
+                        empQuery += " AND 1=0";
+                    }
+                }
+            }
+            else
+            {
+                // Admin can filter by division
+                if (!string.IsNullOrEmpty(selectedDivision) && selectedDivision != "All")
+                {
+                    empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                    empParams.Add(new OracleParameter("Div", selectedDivision));
+                    empParams.Add(new OracleParameter("DivLike", selectedDivision + "%"));
                 }
             }
 
-            string orderDept = selectedCpId.HasValue ? "e.Department" : "Department";
+            string orderDept = selectedCpId.HasValue ? "e.Department" : "e.Department";
             string orderName = selectedCpId.HasValue ? "e.Name" : "Name";
             empQuery += string.Format(" ORDER BY {0} ASC, {1} ASC", orderDept, orderName);
 
@@ -1335,7 +1471,7 @@ namespace AttendanceApp
         }
 
         [WebMethod]
-        public static string GetFullAttendanceSheetData(int year, int month, string category, string contract, string search)
+        public static string GetFullAttendanceSheetData(int year, int month, string category, string contract, string search, string division = "All")
         {
             try
             {
@@ -1452,8 +1588,63 @@ namespace AttendanceApp
                         empQuery += " AND 1=0";
                     }
                 }
+                
+                string deptField = selectedCpId.HasValue ? "e.Department" : "e.Department";
 
-empQuery += " ORDER BY e.Name ASC";
+                if (role != 1 && role != 4)
+                {
+                    var allowedDivs = HttpContext.Current.Session["AllowedDivisions"] as List<string>;
+                    if (allowedDivs == null || allowedDivs.Count == 0)
+                    {
+                        string userPcno = HttpContext.Current.Session["PCNO"]?.ToString() ?? "";
+                        string qDiv = "SELECT DivisionName FROM UserDivisions WHERE PCNO = :PCNO";
+                        DataTable dtDivs = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), qDiv, new OracleParameter("PCNO", userPcno));
+                        allowedDivs = new List<string>();
+                        foreach (DataRow dr in dtDivs.Rows)
+                        {
+                            allowedDivs.Add(dr["DivisionName"].ToString());
+                        }
+                        HttpContext.Current.Session["AllowedDivisions"] = allowedDivs;
+                    }
+
+                    if (allowedDivs != null && !string.IsNullOrEmpty(division) && division != "All" && allowedDivs.Contains(division))
+                    {
+                        empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                        empParams.Add(new OracleParameter("Div", division));
+                        empParams.Add(new OracleParameter("DivLike", division + "%"));
+                    }
+                    else
+                    {
+                        if (allowedDivs != null && allowedDivs.Count > 0)
+                        {
+                            List<string> divClauses = new List<string>();
+                            for (int i = 0; i < allowedDivs.Count; i++)
+                            {
+                                string paramName = "Div" + i;
+                                divClauses.Add("(" + deptField + " = :" + paramName + " OR " + deptField + " LIKE :" + paramName + "Like)");
+                                empParams.Add(new OracleParameter(paramName, allowedDivs[i]));
+                                empParams.Add(new OracleParameter(paramName + "Like", allowedDivs[i] + "%"));
+                            }
+                            empQuery += " AND (" + string.Join(" OR ", divClauses) + ")";
+                        }
+                        else
+                        {
+                            empQuery += " AND 1=0";
+                        }
+                    }
+                }
+                else
+                {
+                    // Admin can filter by division
+                    if (!string.IsNullOrEmpty(division) && division != "All")
+                    {
+                        empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                        empParams.Add(new OracleParameter("Div", division));
+                        empParams.Add(new OracleParameter("DivLike", division + "%"));
+                    }
+                }
+
+                empQuery += " ORDER BY e.Department ASC, e.Name ASC";
 
                 DataTable dtEmp = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), empQuery, empParams.ToArray());
 
@@ -1721,6 +1912,7 @@ empQuery += " ORDER BY e.Name ASC";
                             if (isHol == 1)
                             {
                                 statusLabel = "Holiday";
+                                presentCount += 1.0f;
                             }
                             else if (leaveType == "Carried")
                             {
@@ -1747,6 +1939,7 @@ empQuery += " ORDER BY e.Name ASC";
                             {
                                 statusLabel = "Paid Leave";
                                 currFullPaid++;
+                                presentCount += 1.0f;
                             }
                             else if (leaveType == "Unpaid")
                             {

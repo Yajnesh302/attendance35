@@ -14,6 +14,7 @@ namespace AttendanceApp
         protected global::System.Web.UI.WebControls.DropDownList ddlYear;
         protected global::System.Web.UI.WebControls.DropDownList ddlMonth;
         protected global::System.Web.UI.WebControls.DropDownList ddlCategory;
+        protected global::System.Web.UI.WebControls.DropDownList ddlDivision;
         protected global::System.Web.UI.WebControls.PlaceHolder phContract;
         protected global::System.Web.UI.WebControls.DropDownList ddlContract;
         protected global::System.Web.UI.WebControls.TextBox txtSearch;

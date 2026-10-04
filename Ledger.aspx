@@ -497,6 +497,16 @@
                         </asp:DropDownList>
                     </div>
 
+                    <!-- Directorate / Division selector -->
+                    <div class="calc-control-item-category">
+                        <label class="form-label font-weight-bold mb-1 text-gray-800">
+                            <i class="fas fa-building mr-1 text-primary"></i> Directorate / Division
+                        </label>
+                        <asp:DropDownList ID="ddlDivision" runat="server" CssClass="form-control" AutoPostBack="true" onchange="showLoading();" OnSelectedIndexChanged="ddlDivision_SelectedIndexChanged">
+                            <asp:ListItem Value="All">All</asp:ListItem>
+                        </asp:DropDownList>
+                    </div>
+
                     <!-- Contract Period selector -->
                     <asp:PlaceHolder ID="phContract" runat="server" Visible="false">
                         <div class="calc-control-item-category">
@@ -897,6 +907,10 @@
                 const category = document.getElementById('<%= ddlCategory.ClientID %>').value;
                 
                 let text = `Loaded ledger for ${monthText} ${year} (${category})`;
+                const divSelect = document.getElementById('<%= ddlDivision.ClientID %>');
+                if (divSelect && divSelect.selectedIndex >= 0 && divSelect.value !== "All") {
+                    text += ` - ${divSelect.options[divSelect.selectedIndex].text}`;
+                }
                 <% if (ddlContract.Visible) { %>
                     const contractSelect = document.getElementById('<%= ddlContract.ClientID %>');
                     if (contractSelect && contractSelect.selectedIndex >= 0) {
@@ -919,6 +933,8 @@
             const yVal = document.getElementById('<%= ddlYear.ClientID %>').value;
             const mVal = document.getElementById('<%= ddlMonth.ClientID %>').value;
             const catVal = document.getElementById('<%= ddlCategory.ClientID %>').value;
+            const divEl = document.getElementById('<%= ddlDivision.ClientID %>');
+            const divVal = divEl ? divEl.value : "All";
             const searchVal = document.getElementById('<%= txtSearch.ClientID %>').value;
             
             let contractVal = "";
@@ -938,7 +954,8 @@
                         month: parseInt(mVal),
                         category: catVal,
                         contract: contractVal,
-                        search: searchVal
+                        search: searchVal,
+                        division: divVal
                     })
                 });
 
@@ -965,6 +982,41 @@
                 const days = res.daysInMonth;
                 const monthName = res.monthName;
                 const year = res.year;
+
+                // Map the exact ledger summary data rendered in gvLedger (matching exportSummaryExcel)
+                const gv = document.getElementById("gvLedger");
+                const ledgerMap = new Map();
+                if (gv && gv.rows.length > 1) {
+                    for (let r = 1; r < gv.rows.length; r++) {
+                        const gvRow = gv.rows[r];
+                        if (gvRow.style.display === "none") continue;
+                        if (gvRow.cells.length < 15) continue;
+
+                        const id = gvRow.cells[1].innerText.trim();
+                        const masterId = gvRow.cells[2].innerText.trim();
+
+                        const parseColVal = (cIdx) => {
+                            let cellText = gvRow.cells[cIdx].innerText.trim();
+                            let num = parseFloat(cellText);
+                            return isNaN(num) ? cellText : num;
+                        };
+
+                        const summary = {
+                            opening: parseColVal(6),
+                            paid: parseColVal(7),
+                            half: parseColVal(8),
+                            unpaid: parseColVal(9),
+                            satCut: parseColVal(10),
+                            closing: parseColVal(11),
+                            present: parseColVal(12),
+                            final: parseColVal(13),
+                            remarks: gvRow.cells[14].innerText.trim()
+                        };
+
+                        if (masterId) ledgerMap.set(masterId.toUpperCase(), summary);
+                        if (id) ledgerMap.set(id.toUpperCase(), summary);
+                    }
+                }
 
                 if (typeof ExcelJS !== "undefined") {
                     const wb = new ExcelJS.Workbook();
@@ -1041,6 +1093,20 @@
 
                     // Add Data Rows
                     res.rows.forEach((r, idx) => {
+                        const mKey = (r.MasterId || "").toString().trim().toUpperCase();
+                        const idKey = (r.ID || "").toString().trim().toUpperCase();
+                        const ledgerItem = ledgerMap.get(mKey) || ledgerMap.get(idKey);
+
+                        const openingVal = ledgerItem ? ledgerItem.opening : r.Opening;
+                        const paidVal = ledgerItem ? ledgerItem.paid : r.Paid;
+                        const halfVal = ledgerItem ? ledgerItem.half : r.Half;
+                        const unpaidVal = ledgerItem ? ledgerItem.unpaid : r.Unpaid;
+                        const satCutVal = ledgerItem ? ledgerItem.satCut : r.SatCut;
+                        const closingVal = ledgerItem ? ledgerItem.closing : r.Closing;
+                        const presentVal = ledgerItem ? ledgerItem.present : r.PresentDays;
+                        const finalVal = ledgerItem ? ledgerItem.final : r.FinalDays;
+                        const remarksVal = ledgerItem ? ledgerItem.remarks : r.Remarks;
+
                         const rowVals = [
                             idx + 1,
                             r.ID,
@@ -1056,15 +1122,15 @@
                         }
 
                         rowVals.push(
-                            r.Opening,
-                            r.Paid,
-                            r.Half,
-                            r.Unpaid,
-                            r.SatCut,
-                            r.Closing,
-                            r.PresentDays,
-                            r.FinalDays,
-                            r.Remarks
+                            openingVal,
+                            paidVal,
+                            halfVal,
+                            unpaidVal,
+                            satCutVal,
+                            closingVal,
+                            presentVal,
+                            finalVal,
+                            remarksVal
                         );
 
                         const dataRow = ws.addRow(rowVals);
@@ -1144,12 +1210,26 @@
                     AOA.push(headers);
 
                     res.rows.forEach((r, idx) => {
+                        const mKey = (r.MasterId || "").toString().trim().toUpperCase();
+                        const idKey = (r.ID || "").toString().trim().toUpperCase();
+                        const ledgerItem = ledgerMap.get(mKey) || ledgerMap.get(idKey);
+
+                        const openingVal = ledgerItem ? ledgerItem.opening : r.Opening;
+                        const paidVal = ledgerItem ? ledgerItem.paid : r.Paid;
+                        const halfVal = ledgerItem ? ledgerItem.half : r.Half;
+                        const unpaidVal = ledgerItem ? ledgerItem.unpaid : r.Unpaid;
+                        const satCutVal = ledgerItem ? ledgerItem.satCut : r.SatCut;
+                        const closingVal = ledgerItem ? ledgerItem.closing : r.Closing;
+                        const presentVal = ledgerItem ? ledgerItem.present : r.PresentDays;
+                        const finalVal = ledgerItem ? ledgerItem.final : r.FinalDays;
+                        const remarksVal = ledgerItem ? ledgerItem.remarks : r.Remarks;
+
                         const row = [idx + 1, r.ID, r.MasterId, r.Name, r.Department, r.Category];
                         for (let d = 0; d < days; d++) {
                             let st = r.DailyStatus[d] || "-";
                             row.push(st === "1" ? 1 : st);
                         }
-                        row.push(r.Opening, r.Paid, r.Half, r.Unpaid, r.SatCut, r.Closing, r.PresentDays, r.FinalDays, r.Remarks);
+                        row.push(openingVal, paidVal, halfVal, unpaidVal, satCutVal, closingVal, presentVal, finalVal, remarksVal);
                         AOA.push(row);
                     });
 
@@ -1178,6 +1258,8 @@
             const mSelect = document.getElementById('<%= ddlMonth.ClientID %>');
             const yVal = ySelect ? ySelect.options[ySelect.selectedIndex].text : '';
             const mVal = mSelect ? mSelect.options[mSelect.selectedIndex].text : '';
+            const divSelect = document.getElementById('<%= ddlDivision.ClientID %>');
+            const divSuffix = divSelect && divSelect.selectedIndex >= 0 && divSelect.value !== "All" ? ` (${divSelect.options[divSelect.selectedIndex].text})` : '';
 
             if (typeof ExcelJS !== "undefined") {
                 const wb = new ExcelJS.Workbook();
@@ -1198,7 +1280,7 @@
                 const totalCols = headers.length;
 
                 // Row 1: Merged Title
-                const titleRow = ws.addRow([`Leave Ledger Summary - ${mVal} ${yVal}`]);
+                const titleRow = ws.addRow([`Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`]);
                 ws.mergeCells(1, 1, 1, totalCols);
                 titleRow.height = 30;
                 const titleCell = ws.getCell(1, 1);
@@ -1289,7 +1371,7 @@
             } else {
                 // Fallback to SheetJS
                 const AOA = [];
-                AOA.push([`Leave Ledger Summary - ${mVal} ${yVal}`]);
+                AOA.push([`Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`]);
                 const headerRow = gv.rows[0];
                 const headers = [];
                 for (let c = 0; c < headerRow.cells.length; c++) {
