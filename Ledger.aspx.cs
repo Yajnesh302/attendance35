@@ -622,6 +622,7 @@ namespace AttendanceApp
             resultDt.Columns.Add("PresentDays", typeof(float));
             resultDt.Columns.Add("FinalDays", typeof(float));
             resultDt.Columns.Add("Remarks", typeof(string));
+            resultDt.Columns.Add("JoinDate", typeof(string));
 
             // Fetch Global & Category-specific Adjustments in a single unified query (saves 1 DB roundtrip)
             float globalAdj = 0;
@@ -1292,6 +1293,7 @@ namespace AttendanceApp
                 dr["PresentDays"] = presentDays;
                 dr["FinalDays"] = finalDays;
                 dr["Remarks"] = string.Join("; ", remarksList);
+                dr["JoinDate"] = joinDate.HasValue ? joinDate.Value.ToString("dd-MMM-yyyy") : "";
                 resultDt.Rows.Add(dr);
             }
 

@@ -186,7 +186,7 @@ namespace AttendanceApp
                         SELECT COUNT(*) 
                         FROM AttendanceDraft ad
                         JOIN Employees e ON ad.EmpID = e.MasterId
-                        WHERE e.Department IN (SELECT DivisionName FROM UserDivisions WHERE PCNO = :PCNO)";
+                        WHERE e.Department IN (SELECT DivisionName FROM UserDivisions WHERE PCNO = :PCNO) AND (ad.AutoSat = 0 OR ad.AutoSat is NULL)";
                     object draftRes = DBHelper.ExecuteScalar(DBHelper.GetAttendanceDBConnection(), sqlDrafts, new OracleParameter("PCNO", pcno));
                     PendingDraftCount = draftRes != null && draftRes != DBNull.Value ? Convert.ToInt32(draftRes) : 0;
                 }

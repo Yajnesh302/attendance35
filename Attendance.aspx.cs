@@ -867,7 +867,7 @@ namespace AttendanceApp
                         SELECT EmpID, Day, StatusValue, IsHoliday, LeaveType, AutoSat, Remarks,
                                EnteredByPCNO, EnteredAt, LastEditedByPCNO, LastEditedAt
                         FROM AttendanceDraft
-                        WHERE Year = :Year AND Month = :Month";
+                        WHERE Year = :Year AND Month = :Month AND (AutoSat = 0 OR AutoSat is NULL)";
                     DataTable dtDraft = DBHelper.ExecuteQuery(DBHelper.GetAttendanceDBConnection(), draftQuery,
                         new OracleParameter("Year", year),
                         new OracleParameter("Month", month));
@@ -947,7 +947,7 @@ namespace AttendanceApp
                                 attDict[empId][day.ToString()] = draftCellObj;
                             }
 
-                            if (visibleEmpIds.Contains(empId) && (val != null || !string.IsNullOrEmpty(leave)))
+                            if (visibleEmpIds.Contains(empId) && !autoSat && (val != null || !string.IsNullOrEmpty(leave)))
                             {
                                 pendingDraftCount++;
                             }
@@ -1861,7 +1861,7 @@ namespace AttendanceApp
                     try
                     {
                         // Check how many drafts exist for the target scope (excluding holidays)
-                        string countSql = "SELECT COUNT(*) FROM AttendanceDraft d WHERE d.Year = :Year AND d.Month = :Month AND (d.StatusValue IS NOT NULL OR d.LeaveType IS NOT NULL OR d.Remarks IS NOT NULL) AND (d.IsHoliday = 0 OR d.IsHoliday IS NULL)";
+                        string countSql = "SELECT COUNT(*) FROM AttendanceDraft d WHERE d.Year = :Year AND d.Month = :Month AND (d.StatusValue IS NOT NULL OR d.LeaveType IS NOT NULL OR d.Remarks IS NOT NULL) AND (d.IsHoliday = 0 OR d.IsHoliday IS NULL) AND (d.AutoSat = 0 OR d.AutoSat is NULL)";
                         List<OracleParameter> countParams = new List<OracleParameter>
                         {
                             new OracleParameter("Year", year),

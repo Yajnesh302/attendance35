@@ -432,6 +432,297 @@
             margin-bottom: 0;
             line-height: 1.4;
         }
+
+        /* Custom Export Ledger Modal Styles */
+        .export-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .export-modal-box {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(226, 232, 240, 0.9);
+            width: 720px;
+            max-width: 95vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.94);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            font-family: inherit;
+        }
+
+        html.theme-dark .export-modal-box {
+            background: #1e293b;
+            color: #f8fafc;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(51, 65, 85, 0.8);
+        }
+
+        .export-modal-header {
+            background: #f8fafc;
+            padding: 18px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        html.theme-dark .export-modal-header {
+            background: #0f172a;
+            border-bottom-color: #334155;
+        }
+
+        .export-modal-icon-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #ecfdf5;
+            color: #059669;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.15);
+        }
+
+        html.theme-dark .export-modal-icon-badge {
+            background: #064e3b;
+            color: #34d399;
+        }
+
+        .export-modal-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        html.theme-dark .export-modal-title {
+            color: #f8fafc;
+        }
+
+        .export-modal-subtitle {
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+
+        html.theme-dark .export-modal-subtitle {
+            color: #94a3b8;
+        }
+
+        .export-modal-close {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: #94a3b8;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .export-modal-close:hover {
+            color: #0f172a;
+            background: #e2e8f0;
+        }
+
+        html.theme-dark .export-modal-close:hover {
+            color: #f8fafc;
+            background: #334155;
+        }
+
+        .export-modal-body {
+            padding: 20px 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .export-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        html.theme-dark .export-toolbar {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        .selected-pill-badge {
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: #0284c7;
+            background: #e0f2fe;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #bae6fd;
+        }
+
+        html.theme-dark .selected-pill-badge {
+            background: #075985;
+            color: #e0f2fe;
+            border-color: #0284c7;
+        }
+
+        .export-group-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #ffffff;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        html.theme-dark .export-group-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .export-group-card.ledger-group-card {
+            border-color: #bae6fd;
+        }
+
+        html.theme-dark .export-group-card.ledger-group-card {
+            border-color: #0369a1;
+        }
+
+        .export-group-header {
+            padding: 12px 18px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        html.theme-dark .export-group-header {
+            background: #0f172a;
+            border-bottom-color: #334155;
+        }
+
+        .export-group-header.ledger-main-header {
+            background: #f0f9ff;
+            border-bottom: 1px solid #e0f2fe;
+        }
+
+        html.theme-dark .export-group-header.ledger-main-header {
+            background: #082f49;
+            border-bottom-color: #0c4a6e;
+        }
+
+        .export-section-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .export-section-icon.emp-icon {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .export-section-icon.ledger-icon {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .export-checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+            gap: 8px;
+            padding: 14px 18px;
+        }
+
+        .export-check-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            cursor: pointer;
+            margin-bottom: 0;
+            user-select: none;
+            transition: all 0.15s ease;
+            font-size: 0.88rem;
+            color: #334155;
+        }
+
+        html.theme-dark .export-check-item {
+            background: #0f172a;
+            border-color: #334155;
+            color: #cbd5e1;
+        }
+
+        .export-check-item:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        html.theme-dark .export-check-item:hover {
+            background: #1e293b;
+            border-color: #475569;
+        }
+
+        .export-check-item input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+            accent-color: #0284c7;
+        }
+
+        .export-check-item.highlight-additional {
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+        }
+
+        html.theme-dark .export-check-item.highlight-additional {
+            background: #064e3b;
+            border-color: #059669;
+            color: #ecfdf5;
+        }
+
+        .export-subgroup-body {
+            padding: 12px 18px 6px 18px;
+        }
+
+        .export-modal-footer {
+            background: #f8fafc;
+            padding: 16px 24px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            align-items: center;
+        }
+
+        html.theme-dark .export-modal-footer {
+            background: #0f172a;
+            border-top-color: #334155;
+        }
     </style>
 
     <div id="toast-container"></div>
@@ -557,16 +848,16 @@
                                 </div>
                             </div>
                             <div class="export-tooltip-wrapper">
-                                <button type="button" class="btn btn-outline-primary d-inline-flex align-items-center font-weight-bold" onclick="exportSummaryExcel()" style="height: 38px;">
-                                    <i class="fas fa-table mr-2 text-primary"></i>
-                                    <span>Export Ledger</span>
+                                <button type="button" class="btn btn-outline-primary d-inline-flex align-items-center font-weight-bold" onclick="openExportLedgerModal()" style="height: 38px;">
+                                    <i class="fas fa-file-export mr-2 text-primary"></i>
+                                    <span>Export</span>
                                 </button>
                                 <div class="custom-tooltip-box">
                                     <div class="tooltip-card-title text-primary">
-                                        <i class="fas fa-file-invoice"></i> Leave Ledger Details
+                                        <i class="fas fa-file-export"></i> Custom Export
                                     </div>
                                     <div class="tooltip-card-desc">
-                                        Exports the 15-column summary table (Opening balance, Paid, Half, Unpaid, Sat Cut, Closing, Present, Final & Remarks) for all currently filtered rows.
+                                        Customize and export columns (Joining Date, Division, Master ID, Present, Leaves, AutoSat, Balances, etc.) to Excel.
                                     </div>
                                 </div>
                             </div>
@@ -605,8 +896,158 @@
                         <%# FormatRemarks(Eval("Remarks")) %>
                     </ItemTemplate>
                 </asp:TemplateField>
+                <asp:BoundField DataField="JoinDate" HeaderText="Joining Date" HeaderStyle-CssClass="d-none" ItemStyle-CssClass="d-none" />
             </Columns>
         </asp:GridView>
+    </div>
+
+    <!-- Custom Ledger Export Modal -->
+    <div id="exportLedgerModal" class="export-modal-overlay">
+        <div class="export-modal-box">
+            <!-- Header -->
+            <div class="export-modal-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="export-modal-icon-badge">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div>
+                        <h5 class="export-modal-title mb-0">Export Ledger to Excel</h5>
+                        <p class="export-modal-subtitle mb-0">Choose which employee and ledger columns to include in your spreadsheet</p>
+                    </div>
+                </div>
+                <button type="button" class="export-modal-close" onclick="closeExportLedgerModal()" title="Close">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="export-modal-body">
+                <!-- Quick Actions Toolbar -->
+                <div class="export-toolbar mb-3">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary" onclick="setAllExportColumns(true)">
+                            <i class="fas fa-check-double mr-1 text-primary"></i> Select All
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setAllExportColumns(false)">
+                            <i class="fas fa-times mr-1 text-danger"></i> Deselect All
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetDefaultExportColumns()">
+                            <i class="fas fa-undo mr-1 text-info"></i> Reset Default
+                        </button>
+                    </div>
+                    <div class="selected-pill-badge">
+                        <i class="fas fa-columns mr-1"></i> <span id="exportSelectedCount">16</span> / 16 Columns Selected
+                    </div>
+                </div>
+
+                <!-- Group 1: Employee Information & Additional Fields -->
+                <div class="export-group-card mb-3">
+                    <div class="export-group-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="export-section-icon emp-icon"><i class="fas fa-id-card"></i></span>
+                            <span class="font-weight-bold text-dark">Employee Information & Additional Details</span>
+                        </div>
+                        <label class="mb-0 text-muted small cursor-pointer d-flex align-items-center">
+                            <input type="checkbox" id="chkGroupEmployee" checked class="mr-1" onchange="toggleGroupEmployee(this.checked)">
+                            <span class="font-weight-semibold">Toggle All</span>
+                        </label>
+                    </div>
+                    <div class="export-checkbox-grid">
+                        <label class="export-check-item">
+                            <input type="checkbox" id="chk_sno" class="export-col-check export-emp-sub" data-col="sno" checked onchange="onEmpSubCheckboxChange()">
+                            <span class="check-title">S.No <span class="text-muted small">(Serial)</span></span>
+                        </label>
+                        <label class="export-check-item">
+                            <input type="checkbox" id="chk_id" class="export-col-check export-emp-sub" data-col="id" checked onchange="onEmpSubCheckboxChange()">
+                            <span class="check-title">ID <span class="text-muted small">(Emp ID)</span></span>
+                        </label>
+                        <label class="export-check-item">
+                            <input type="checkbox" id="chk_masterid" class="export-col-check export-emp-sub" data-col="masterid" checked onchange="onEmpSubCheckboxChange()">
+                            <span class="check-title">Master ID</span>
+                        </label>
+                        <label class="export-check-item">
+                            <input type="checkbox" id="chk_name" class="export-col-check export-emp-sub" data-col="name" checked onchange="onEmpSubCheckboxChange()">
+                            <span class="check-title font-weight-bold">Name</span>
+                        </label>
+                        <label class="export-check-item">
+                            <input type="checkbox" id="chk_dept" class="export-col-check export-emp-sub" data-col="dept" checked onchange="onEmpSubCheckboxChange()">
+                            <span class="check-title">Directorate / Division</span>
+                        </label>
+                        <label class="export-check-item">
+                            <input type="checkbox" id="chk_cat" class="export-col-check export-emp-sub" data-col="cat" checked onchange="onEmpSubCheckboxChange()">
+                            <span class="check-title">Category</span>
+                        </label>
+                        <label class="export-check-item">
+                            <input type="checkbox" id="chk_joindate" class="export-col-check export-emp-sub" data-col="joindate" checked onchange="onEmpSubCheckboxChange()">
+                            <span class="check-title">Joining Date</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Group 2: Ledger (Attendance & Leave Balances) -->
+                <div class="export-group-card ledger-group-card">
+                    <div class="export-group-header ledger-main-header d-flex justify-content-between align-items-center">
+                        <label class="mb-0 font-weight-bold text-primary d-flex align-items-center cursor-pointer" style="font-size: 0.98rem;">
+                            <input type="checkbox" id="chkGroupLedger" checked class="mr-2" style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleGroupLedger(this.checked)">
+                            <span class="export-section-icon ledger-icon mr-2"><i class="fas fa-calculator"></i></span>
+                            <span>Ledger (Calculations & Metrics)</span>
+                        </label>
+                        <span class="badge badge-primary py-1 px-2" style="font-size: 0.76rem; font-weight: 500;">
+                            <i class="fas fa-check-circle mr-1"></i> Auto-selects all metrics
+                        </span>
+                    </div>
+                    <div class="export-subgroup-body">
+                        <div class="small text-muted mb-2 font-italic">
+                            Ledger sub-parts (Uncheck any specific metric not required):
+                        </div>
+                        <div class="export-checkbox-grid">
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_opening" class="export-col-check export-ledger-sub" data-col="opening" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title">Opening Balance</span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_paid" class="export-col-check export-ledger-sub" data-col="paid" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title text-danger font-weight-semibold">Paid Leaves (-)</span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_half" class="export-col-check export-ledger-sub" data-col="half" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title">Half Days</span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_unpaid" class="export-col-check export-ledger-sub" data-col="unpaid" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title">Unpaid Leaves</span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_satcut" class="export-col-check export-ledger-sub" data-col="satcut" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title">Sat Cut <span class="text-muted small">(Auto Sat)</span></span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_closing" class="export-col-check export-ledger-sub" data-col="closing" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title font-weight-bold">Closing Balance</span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_present" class="export-col-check export-ledger-sub" data-col="present" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title">Present Days</span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_final" class="export-col-check export-ledger-sub" data-col="final" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title font-weight-bold">Final Days (Total)</span>
+                            </label>
+                            <label class="export-check-item">
+                                <input type="checkbox" id="chk_remarks" class="export-col-check export-ledger-sub" data-col="remarks" checked onchange="onLedgerSubCheckboxChange()">
+                                <span class="check-title">Remarks</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="export-modal-footer">
+                <button type="button" class="btn btn-light border px-3 font-weight-bold" onclick="closeExportLedgerModal()">Cancel</button>
+                <button type="button" class="btn btn-primary d-inline-flex align-items-center font-weight-bold px-4" id="btnDoExportExcel" onclick="performCustomLedgerExport()" style="height: 38px;">
+                    <i class="fas fa-file-excel mr-2"></i> Export to Excel
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1247,10 +1688,158 @@
             }
         }
 
-        async function exportSummaryExcel() {
+        // Custom Ledger Column Definitions
+        const ALL_EXPORT_COLUMNS = [
+            // Employee Details & Additional Info
+            { id: 'chk_sno', group: 'emp', key: 'sno', title: 'S.No', width: 6, align: 'center', idx: 0, isSNo: true },
+            { id: 'chk_id', group: 'emp', key: 'id', title: 'ID', width: 11, align: 'center', idx: 1 },
+            { id: 'chk_masterid', group: 'emp', key: 'masterId', title: 'Master ID', width: 14, align: 'center', idx: 2 },
+            { id: 'chk_name', group: 'emp', key: 'name', title: 'Name', width: 26, align: 'left', idx: 3, bold: true },
+            { id: 'chk_dept', group: 'emp', key: 'dept', title: 'Directorate', width: 22, align: 'left', idx: 4 },
+            { id: 'chk_cat', group: 'emp', key: 'cat', title: 'Category', width: 24, align: 'left', idx: 5 },
+            { id: 'chk_joindate', group: 'emp', key: 'joinDate', title: 'Joining Date', width: 14, align: 'center', idx: 15 },
+            // Ledger Calculation Columns
+            { id: 'chk_opening', group: 'ledger', key: 'opening', title: 'Opening', width: 10, align: 'center', idx: 6, isNum: true },
+            { id: 'chk_paid', group: 'ledger', key: 'paid', title: 'Paid (-)', width: 10, align: 'center', idx: 7, isNum: true, redText: true },
+            { id: 'chk_half', group: 'ledger', key: 'half', title: 'Half', width: 8, align: 'center', idx: 8, isNum: true },
+            { id: 'chk_unpaid', group: 'ledger', key: 'unpaid', title: 'Unpaid', width: 10, align: 'center', idx: 9, isNum: true },
+            { id: 'chk_satcut', group: 'ledger', key: 'satCut', title: 'Sat Cut', width: 10, align: 'center', idx: 10, isNum: true },
+            { id: 'chk_closing', group: 'ledger', key: 'closing', title: 'Closing', width: 11, align: 'center', idx: 11, isNum: true, highlight: true },
+            { id: 'chk_present', group: 'ledger', key: 'present', title: 'Present', width: 10, align: 'center', idx: 12, isNum: true },
+            { id: 'chk_final', group: 'ledger', key: 'final', title: 'Final', width: 10, align: 'center', idx: 13, isNum: true },
+            { id: 'chk_remarks', group: 'ledger', key: 'remarks', title: 'Remarks', width: 35, align: 'left', idx: 14 }
+        ];
+
+        function openExportLedgerModal() {
             const gv = document.getElementById("gvLedger");
             if (!gv || gv.rows.length <= 1) {
                 alert("No ledger data available to export!");
+                return;
+            }
+            const modal = document.getElementById("exportLedgerModal");
+            if (!modal) return;
+            modal.style.display = "flex";
+            modal.offsetHeight; // trigger reflow
+            modal.style.opacity = "1";
+            const box = modal.querySelector(".export-modal-box");
+            if (box) box.style.transform = "scale(1)";
+            updateExportColCount();
+        }
+
+        function closeExportLedgerModal() {
+            const modal = document.getElementById("exportLedgerModal");
+            if (!modal) return;
+            modal.style.opacity = "0";
+            const box = modal.querySelector(".export-modal-box");
+            if (box) box.style.transform = "scale(0.94)";
+            setTimeout(() => {
+                modal.style.display = "none";
+            }, 220);
+        }
+
+        function toggleGroupLedger(checked) {
+            document.querySelectorAll('.export-ledger-sub').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateExportColCount();
+        }
+
+        function onLedgerSubCheckboxChange() {
+            const allSubs = document.querySelectorAll('.export-ledger-sub');
+            let checkedCount = 0;
+            allSubs.forEach(cb => { if (cb.checked) checkedCount++; });
+
+            const parentCb = document.getElementById('chkGroupLedger');
+            if (parentCb) {
+                if (checkedCount === allSubs.length) {
+                    parentCb.checked = true;
+                    parentCb.indeterminate = false;
+                } else if (checkedCount === 0) {
+                    parentCb.checked = false;
+                    parentCb.indeterminate = false;
+                } else {
+                    parentCb.checked = true;
+                    parentCb.indeterminate = true;
+                }
+            }
+            updateExportColCount();
+        }
+
+        function toggleGroupEmployee(checked) {
+            document.querySelectorAll('.export-emp-sub').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateExportColCount();
+        }
+
+        function onEmpSubCheckboxChange() {
+            const allSubs = document.querySelectorAll('.export-emp-sub');
+            let checkedCount = 0;
+            allSubs.forEach(cb => { if (cb.checked) checkedCount++; });
+
+            const parentCb = document.getElementById('chkGroupEmployee');
+            if (parentCb) {
+                if (checkedCount === allSubs.length) {
+                    parentCb.checked = true;
+                    parentCb.indeterminate = false;
+                } else if (checkedCount === 0) {
+                    parentCb.checked = false;
+                    parentCb.indeterminate = false;
+                } else {
+                    parentCb.checked = true;
+                    parentCb.indeterminate = true;
+                }
+            }
+            updateExportColCount();
+        }
+
+        function setAllExportColumns(val) {
+            document.querySelectorAll('.export-col-check').forEach(cb => cb.checked = val);
+            const parentLedger = document.getElementById('chkGroupLedger');
+            if (parentLedger) { parentLedger.checked = val; parentLedger.indeterminate = false; }
+            const parentEmp = document.getElementById('chkGroupEmployee');
+            if (parentEmp) { parentEmp.checked = val; parentEmp.indeterminate = false; }
+            updateExportColCount();
+        }
+
+        function resetDefaultExportColumns() {
+            setAllExportColumns(true);
+        }
+
+        function updateExportColCount() {
+            const allColChecks = document.querySelectorAll('.export-col-check');
+            let count = 0;
+            allColChecks.forEach(cb => { if (cb.checked) count++; });
+            const countEl = document.getElementById('exportSelectedCount');
+            if (countEl) countEl.textContent = count;
+
+            const btn = document.getElementById('btnDoExportExcel');
+            if (btn) {
+                btn.disabled = (count === 0);
+                if (count === 0) {
+                    btn.classList.add('opacity-50');
+                    btn.style.cursor = 'not-allowed';
+                } else {
+                    btn.classList.remove('opacity-50');
+                    btn.style.cursor = 'pointer';
+                }
+            }
+        }
+
+        async function performCustomLedgerExport() {
+            const gv = document.getElementById("gvLedger");
+            if (!gv || gv.rows.length <= 1) {
+                alert("No ledger data available to export!");
+                return;
+            }
+
+            const activeCols = ALL_EXPORT_COLUMNS.filter(c => {
+                const el = document.getElementById(c.id);
+                return el && el.checked;
+            });
+
+            if (activeCols.length === 0) {
+                alert("Please select at least one column to export!");
                 return;
             }
 
@@ -1260,6 +1849,8 @@
             const mVal = mSelect ? mSelect.options[mSelect.selectedIndex].text : '';
             const divSelect = document.getElementById('<%= ddlDivision.ClientID %>');
             const divSuffix = divSelect && divSelect.selectedIndex >= 0 && divSelect.value !== "All" ? ` (${divSelect.options[divSelect.selectedIndex].text})` : '';
+
+            closeExportLedgerModal();
 
             if (typeof ExcelJS !== "undefined") {
                 const wb = new ExcelJS.Workbook();
@@ -1272,12 +1863,8 @@
                     ]
                 });
 
-                const headerRowEl = gv.rows[0];
-                const headers = [];
-                for (let c = 0; c < headerRowEl.cells.length; c++) {
-                    headers.push(headerRowEl.cells[c].innerText.replace(/[▲▼]/g, '').trim());
-                }
-                const totalCols = headers.length;
+                const totalCols = activeCols.length;
+                const headers = activeCols.map(c => c.title);
 
                 // Row 1: Merged Title
                 const titleRow = ws.addRow([`Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`]);
@@ -1305,9 +1892,8 @@
                 }
 
                 // Set column widths
-                const colWidths = [6, 11, 14, 26, 22, 24, 10, 10, 8, 10, 10, 11, 10, 10, 35];
                 for (let c = 1; c <= totalCols; c++) {
-                    ws.getColumn(c).width = colWidths[c - 1] || 15;
+                    ws.getColumn(c).width = activeCols[c - 1].width || 15;
                 }
 
                 // Data rows
@@ -1315,26 +1901,32 @@
                 for (let r = 1; r < gv.rows.length; r++) {
                     const row = gv.rows[r];
                     if (row.style.display === "none") continue;
-                    if (row.cells.length < totalCols) continue;
+                    if (row.cells.length < 15) continue;
 
                     const rowData = [];
-                    for (let c = 0; c < row.cells.length; c++) {
-                        let cellText = row.cells[c].innerText.trim();
-                        if (c === 0) {
-                            rowData.push(sNo++);
-                        } else if (c >= 6 && c <= 13) {
-                            let num = parseFloat(cellText);
-                            rowData.push(isNaN(num) ? cellText : num);
+                    for (let i = 0; i < activeCols.length; i++) {
+                        const colDef = activeCols[i];
+                        if (colDef.isSNo) {
+                            rowData.push(sNo);
                         } else {
-                            rowData.push(cellText);
+                            const cellEl = row.cells[colDef.idx];
+                            let cellText = cellEl ? cellEl.innerText.trim() : "";
+                            if (colDef.isNum) {
+                                let num = parseFloat(cellText);
+                                rowData.push(isNaN(num) ? cellText : num);
+                            } else {
+                                rowData.push(cellText);
+                            }
                         }
                     }
+                    sNo++;
 
                     const dataRow = ws.addRow(rowData);
                     dataRow.height = 20;
 
                     for (let c = 1; c <= totalCols; c++) {
                         const cell = dataRow.getCell(c);
+                        const colDef = activeCols[c - 1];
                         cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
                         cell.border = {
                             top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
@@ -1343,15 +1935,14 @@
                             right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
                         };
 
-                        if (c === 4 || c === 5 || c === 6 || c === totalCols) {
-                            cell.alignment = { horizontal: 'left', vertical: 'middle' };
-                        } else {
-                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
-                        }
+                        cell.alignment = { horizontal: colDef.align || 'center', vertical: 'middle' };
 
-                        if (c === 8) {
+                        if (colDef.bold) {
+                            cell.font.bold = true;
+                        }
+                        if (colDef.redText) {
                             cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFDC2626' } };
-                        } else if (c === 12) {
+                        } else if (colDef.highlight) {
                             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
                             cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF0F172A' } };
                         }
@@ -1371,39 +1962,65 @@
             } else {
                 // Fallback to SheetJS
                 const AOA = [];
+                const totalCols = activeCols.length;
                 AOA.push([`Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`]);
-                const headerRow = gv.rows[0];
-                const headers = [];
-                for (let c = 0; c < headerRow.cells.length; c++) {
-                    headers.push(headerRow.cells[c].innerText.replace(/[▲▼]/g, '').trim());
-                }
-                AOA.push(headers);
+                AOA.push(activeCols.map(c => c.title));
 
                 let sNo = 1;
                 for (let r = 1; r < gv.rows.length; r++) {
                     const row = gv.rows[r];
                     if (row.style.display === "none") continue;
-                    if (row.cells.length < headers.length) continue;
+                    if (row.cells.length < 15) continue;
 
                     const rowData = [];
-                    for (let c = 0; c < row.cells.length; c++) {
-                        let cellText = row.cells[c].innerText.trim();
-                        if (c === 0) rowData.push(sNo++);
-                        else if (c >= 6 && c <= 13) {
-                            let num = parseFloat(cellText);
-                            rowData.push(isNaN(num) ? cellText : num);
-                        } else rowData.push(cellText);
+                    for (let i = 0; i < activeCols.length; i++) {
+                        const colDef = activeCols[i];
+                        if (colDef.isSNo) {
+                            rowData.push(sNo);
+                        } else {
+                            const cellEl = row.cells[colDef.idx];
+                            let cellText = cellEl ? cellEl.innerText.trim() : "";
+                            if (colDef.isNum) {
+                                let num = parseFloat(cellText);
+                                rowData.push(isNaN(num) ? cellText : num);
+                            } else {
+                                rowData.push(cellText);
+                            }
+                        }
                     }
+                    sNo++;
                     AOA.push(rowData);
                 }
 
                 const ws = XLSX.utils.aoa_to_sheet(AOA);
                 const wb = XLSX.utils.book_new();
-                ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
+                ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }];
                 ws["!freeze"] = { xSplit: "0", ySplit: "2", topLeftCell: "A3", activePane: "bottomLeft", state: "frozen" };
                 XLSX.utils.book_append_sheet(wb, ws, "Ledger Summary");
                 XLSX.writeFile(wb, `Leave_Ledger_Summary_${mVal}_${yVal}.xlsx`);
             }
         }
+
+        // Keep exportSummaryExcel as alias pointing to custom selection modal
+        function exportSummaryExcel() {
+            openExportLedgerModal();
+        }
+
+        // Close modal on Escape key and backdrop click
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeExportLedgerModal();
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById("exportLedgerModal");
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeExportLedgerModal();
+                    }
+                });
+            }
+        });
     </script>
 </asp:Content>
