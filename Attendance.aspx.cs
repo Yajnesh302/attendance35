@@ -259,21 +259,21 @@ namespace AttendanceApp
                 var allowedDivs = HttpContext.Current.Session["AllowedDivisions"] as List<string>;
                 if (allowedDivs != null && allowedDivs.Contains(division))
                 {
-                    empQuery += " AND e.Department LIKE :Div";
-                    parameters.Add(new OracleParameter("Div", division + "%"));
+                    empQuery += " AND e.Department = :Div";
+                    parameters.Add(new OracleParameter("Div", division));
                 }
                 else
                 {
                     if (allowedDivs != null && allowedDivs.Count > 0)
                     {
-                        List<string> divClauses = new List<string>();
+                        List<string> divParams = new List<string>();
                         for (int i = 0; i < allowedDivs.Count; i++)
                         {
                             string paramName = "Div" + i;
-                            divClauses.Add("e.Department LIKE :" + paramName);
-                            parameters.Add(new OracleParameter(paramName, allowedDivs[i] + "%"));
+                            divParams.Add(":" + paramName);
+                            parameters.Add(new OracleParameter(paramName, allowedDivs[i]));
                         }
-                        empQuery += " AND (" + string.Join(" OR ", divClauses) + ")";
+                        empQuery += " AND e.Department IN (" + string.Join(", ", divParams) + ")";
                     }
                     else
                     {

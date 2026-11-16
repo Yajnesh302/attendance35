@@ -314,20 +314,35 @@ namespace AttendanceApp
 
                 string selectedCat = ddlBulkLeaveCategory.SelectedValue;
                 string selectedDiv = ddlBulkLeaveDivision.SelectedValue;
+                int role = Convert.ToInt32(Session["Role"] ?? 0);
+                string pcno = Session["PCNO"]?.ToString() ?? "";
 
                 // Build query to select target employees who have active engagements
                 string selectSql = @"
                     SELECT e.MasterId, ee.ContractPeriodId 
                     FROM Employees e
                     JOIN EmployeeEngagements ee ON e.CurrentEngagementId = ee.Id
-                    WHERE e.Status <> 'Resigned'";
+                    WHERE e.Status <> 'Resigned' AND ee.ContractPeriodId IS NOT NULL";
                 
                 var parameters = new List<OracleParameter>();
-                if (selectedCat != "All")
+                int tierId;
+                if (selectedCat != "All" && int.TryParse(selectedCat, out tierId))
                 {
-                    selectSql += " AND e.Category = :Category";
-                    parameters.Add(new OracleParameter("Category", selectedCat));
+                    selectSql += " AND NVL(ee.TierId, e.TierId) = :TierId";
+                    parameters.Add(new OracleParameter("TierId", tierId));
                 }
+                else if (selectedCat == "All" && role != 4)
+                {
+                    List<int> visibleTiers = DBHelper.GetVisibleTierIds(pcno, role);
+                    if (visibleTiers == null || visibleTiers.Count == 0)
+                    {
+                        ShowMessage("No accessible categories found for your account.", false);
+                        return;
+                    }
+                    string inClause = string.Join(",", visibleTiers);
+                    selectSql += $" AND NVL(ee.TierId, e.TierId) IN ({inClause})";
+                }
+
                 if (selectedDiv != "All")
                 {
                     selectSql += " AND e.Department = :Division";
@@ -395,7 +410,10 @@ namespace AttendanceApp
                 }
 
                 // Log the action
-                string desc = $"Bulk leave adjustment: {(amount >= 0 ? "+" : "")}{amount} days applied with Effective Date {effectiveDate:yyyy-MM-dd} to Category: '{selectedCat}', Directorate: '{selectedDiv}'. Rows updated: {rowsAffected}. Remarks: {remarks}";
+                string catDisplay = (ddlBulkLeaveCategory.SelectedItem != null && selectedCat != "All")
+                    ? ddlBulkLeaveCategory.SelectedItem.Text
+                    : (selectedCat == "All" ? "All Categories" : selectedCat);
+                string desc = $"Bulk leave adjustment: {(amount >= 0 ? "+" : "")}{amount} days applied with Effective Date {effectiveDate:yyyy-MM-dd} to Category: '{catDisplay}', Directorate: '{selectedDiv}'. Rows updated: {rowsAffected}. Remarks: {remarks}";
                 ActionLogger.LogAction("BULK_LEAVE", "ALL", desc, null, null);
 
                 // Clear controls
@@ -435,20 +453,35 @@ namespace AttendanceApp
 
                 string selectedCat = ddlBulkLeaveCategory.SelectedValue;
                 string selectedDiv = ddlBulkLeaveDivision.SelectedValue;
+                int role = Convert.ToInt32(Session["Role"] ?? 0);
+                string pcno = Session["PCNO"]?.ToString() ?? "";
 
                 // Build query to select target employees who have active engagements and get their current LeaveBalance
                 string selectSql = @"
                     SELECT e.MasterId, e.LeaveBalance, ee.ContractPeriodId 
                     FROM Employees e
                     JOIN EmployeeEngagements ee ON e.CurrentEngagementId = ee.Id
-                    WHERE e.Status <> 'Resigned'";
+                    WHERE e.Status <> 'Resigned' AND ee.ContractPeriodId IS NOT NULL";
                 
                 var parameters = new List<OracleParameter>();
-                if (selectedCat != "All")
+                int tierId;
+                if (selectedCat != "All" && int.TryParse(selectedCat, out tierId))
                 {
-                    selectSql += " AND e.Category = :Category";
-                    parameters.Add(new OracleParameter("Category", selectedCat));
+                    selectSql += " AND NVL(ee.TierId, e.TierId) = :TierId";
+                    parameters.Add(new OracleParameter("TierId", tierId));
                 }
+                else if (selectedCat == "All" && role != 4)
+                {
+                    List<int> visibleTiers = DBHelper.GetVisibleTierIds(pcno, role);
+                    if (visibleTiers == null || visibleTiers.Count == 0)
+                    {
+                        ShowMessage("No accessible categories found for your account.", false);
+                        return;
+                    }
+                    string inClause = string.Join(",", visibleTiers);
+                    selectSql += $" AND NVL(ee.TierId, e.TierId) IN ({inClause})";
+                }
+
                 if (selectedDiv != "All")
                 {
                     selectSql += " AND e.Department = :Division";
@@ -520,7 +553,10 @@ namespace AttendanceApp
                 }
 
                 // Log the action
-                string desc = $"Bulk leave reset to 0 applied with Effective Date {effectiveDate:yyyy-MM-dd} to Category: '{selectedCat}', Directorate: '{selectedDiv}'. Active employees adjusted: {rowsAffected}. Remarks: {remarks}";
+                string catDisplay = (ddlBulkLeaveCategory.SelectedItem != null && selectedCat != "All")
+                    ? ddlBulkLeaveCategory.SelectedItem.Text
+                    : (selectedCat == "All" ? "All Categories" : selectedCat);
+                string desc = $"Bulk leave reset to 0 applied with Effective Date {effectiveDate:yyyy-MM-dd} to Category: '{catDisplay}', Directorate: '{selectedDiv}'. Active employees adjusted: {rowsAffected}. Remarks: {remarks}";
                 ActionLogger.LogAction("BULK_LEAVE_RESET", "ALL", desc, null, null);
 
                 // Clear controls

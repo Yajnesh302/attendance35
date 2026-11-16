@@ -565,23 +565,21 @@ namespace AttendanceApp
 
                 if (allowedDivs != null && !string.IsNullOrEmpty(selectedDivision) && selectedDivision != "All" && allowedDivs.Contains(selectedDivision))
                 {
-                    empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                    empQuery += " AND " + deptField + " = :Div";
                     empParams.Add(new OracleParameter("Div", selectedDivision));
-                    empParams.Add(new OracleParameter("DivLike", selectedDivision + "%"));
                 }
                 else
                 {
                     if (allowedDivs != null && allowedDivs.Count > 0)
                     {
-                        List<string> divClauses = new List<string>();
+                        List<string> divParams = new List<string>();
                         for (int i = 0; i < allowedDivs.Count; i++)
                         {
                             string paramName = "Div" + i;
-                            divClauses.Add("(" + deptField + " = :" + paramName + " OR " + deptField + " LIKE :" + paramName + "Like)");
+                            divParams.Add(":" + paramName);
                             empParams.Add(new OracleParameter(paramName, allowedDivs[i]));
-                            empParams.Add(new OracleParameter(paramName + "Like", allowedDivs[i] + "%"));
                         }
-                        empQuery += " AND (" + string.Join(" OR ", divClauses) + ")";
+                        empQuery += " AND " + deptField + " IN (" + string.Join(", ", divParams) + ")";
                     }
                     else
                     {
@@ -594,9 +592,8 @@ namespace AttendanceApp
                 // Admin can filter by division
                 if (!string.IsNullOrEmpty(selectedDivision) && selectedDivision != "All")
                 {
-                    empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                    empQuery += " AND " + deptField + " = :Div";
                     empParams.Add(new OracleParameter("Div", selectedDivision));
-                    empParams.Add(new OracleParameter("DivLike", selectedDivision + "%"));
                 }
             }
 
@@ -1611,23 +1608,21 @@ namespace AttendanceApp
 
                     if (allowedDivs != null && !string.IsNullOrEmpty(division) && division != "All" && allowedDivs.Contains(division))
                     {
-                        empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                        empQuery += " AND " + deptField + " = :Div";
                         empParams.Add(new OracleParameter("Div", division));
-                        empParams.Add(new OracleParameter("DivLike", division + "%"));
                     }
                     else
                     {
                         if (allowedDivs != null && allowedDivs.Count > 0)
                         {
-                            List<string> divClauses = new List<string>();
+                            List<string> divParams = new List<string>();
                             for (int i = 0; i < allowedDivs.Count; i++)
                             {
                                 string paramName = "Div" + i;
-                                divClauses.Add("(" + deptField + " = :" + paramName + " OR " + deptField + " LIKE :" + paramName + "Like)");
+                                divParams.Add(":" + paramName);
                                 empParams.Add(new OracleParameter(paramName, allowedDivs[i]));
-                                empParams.Add(new OracleParameter(paramName + "Like", allowedDivs[i] + "%"));
                             }
-                            empQuery += " AND (" + string.Join(" OR ", divClauses) + ")";
+                            empQuery += " AND " + deptField + " IN (" + string.Join(", ", divParams) + ")";
                         }
                         else
                         {
@@ -1640,9 +1635,8 @@ namespace AttendanceApp
                     // Admin can filter by division
                     if (!string.IsNullOrEmpty(division) && division != "All")
                     {
-                        empQuery += " AND (" + deptField + " = :Div OR " + deptField + " LIKE :DivLike)";
+                        empQuery += " AND " + deptField + " = :Div";
                         empParams.Add(new OracleParameter("Div", division));
-                        empParams.Add(new OracleParameter("DivLike", division + "%"));
                     }
                 }
 

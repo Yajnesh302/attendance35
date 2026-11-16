@@ -1370,6 +1370,81 @@
             }
         });
 
+        function getDownloadTimestamp() {
+            const now = new Date();
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            const strHours = String(hours).padStart(2, '0');
+            return `${day}-${month}-${year} ${strHours}:${minutes}:${seconds} ${ampm}`;
+        }
+
+        function getHeaderRow2Layout(colWidths) {
+            const totalCols = colWidths.length;
+            if (totalCols <= 1) {
+                return { leftEnd: 0, titleStartCol: 1, titleEndCol: 1, rightStart: 2 };
+            }
+            if (totalCols === 2) {
+                return { leftEnd: 0, titleStartCol: 1, titleEndCol: 1, rightStart: 2 };
+            }
+
+            // Determine right columns for timestamp (needs at least ~22 width, max ~30% of total columns)
+            let rightColsCount = 0;
+            let rightWidth = 0;
+            const maxRightCols = Math.max(1, Math.floor(totalCols / 3));
+
+            for (let i = totalCols - 1; i >= 0; i--) {
+                rightColsCount++;
+                rightWidth += (colWidths[i] || 10);
+                if (rightWidth >= 22 || rightColsCount >= maxRightCols) {
+                    break;
+                }
+            }
+            if (rightColsCount >= totalCols - 1) {
+                rightColsCount = Math.max(1, totalCols - 2);
+                rightWidth = 0;
+                for (let i = totalCols - rightColsCount; i < totalCols; i++) {
+                    rightWidth += (colWidths[i] || 10);
+                }
+            }
+
+            const rightStart = totalCols - rightColsCount + 1; // 1-based
+
+            // Balance with left spacer columns so that center of title matches center of entire row
+            let bestLeftCols = 0;
+            let bestDiff = rightWidth;
+            let currentLeftWidth = 0;
+
+            for (let i = 0; i < rightStart - 2; i++) {
+                currentLeftWidth += (colWidths[i] || 10);
+                const diff = Math.abs(currentLeftWidth - rightWidth);
+                if (diff < bestDiff) {
+                    bestDiff = diff;
+                    bestLeftCols = i + 1;
+                } else if (currentLeftWidth > rightWidth) {
+                    break;
+                }
+            }
+
+            const leftEnd = bestLeftCols;
+            const titleStartCol = leftEnd + 1;
+            const titleEndCol = rightStart - 1;
+
+            return {
+                leftEnd: leftEnd,
+                titleStartCol: titleStartCol,
+                titleEndCol: titleEndCol,
+                rightStart: rightStart
+            };
+        }
+
         async function exportExcel() {
             const yVal = document.getElementById('<%= ddlYear.ClientID %>').value;
             const mVal = document.getElementById('<%= ddlMonth.ClientID %>').value;
@@ -1466,7 +1541,7 @@
 
                     const ws = wb.addWorksheet("Attendance Sheet", {
                         views: [
-                            { state: 'frozen', ySplit: 2, activePane: 'bottomLeft', topLeftCell: 'A3' }
+                            { state: 'frozen', ySplit: 3, activePane: 'bottomLeft', topLeftCell: 'A4' }
                         ]
                     });
 
@@ -1499,17 +1574,50 @@
                     );
 
                     const totalCols = baseColumns.length;
+                    const colWidths = baseColumns.map(c => c.width || 10);
+                    const downloadTime = getDownloadTimestamp();
+                    const layout = getHeaderRow2Layout(colWidths);
 
-                    // Row 1: Merged Title Header
-                    const titleRow = ws.addRow([`Complete Monthly Attendance Sheet - ${monthName} ${year}`]);
+                    // Row 1: Main System Heading
+                    const sysRow = ws.addRow(["ATTENDANCE RECORDING SYSTEM"]);
                     ws.mergeCells(1, 1, 1, totalCols);
-                    titleRow.height = 30;
-                    const titleCell = ws.getCell(1, 1);
-                    titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-                    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-                    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    sysRow.height = 30;
+                    const sysCell = ws.getCell(1, 1);
+                    sysCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                    sysCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+                    sysCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-                    // Row 2: Column Headers
+                    // Row 2: Sub-Title (Center) & Date/Time (Right) - perfectly balanced to match Row 1 center
+                    const row2Vals = new Array(totalCols).fill('');
+                    row2Vals[layout.titleStartCol - 1] = `Complete Monthly Attendance Sheet - ${monthName} ${year}`;
+                    if (layout.rightStart <= totalCols) {
+                        row2Vals[layout.rightStart - 1] = downloadTime;
+                    }
+                    const subTitleRow = ws.addRow(row2Vals);
+                    subTitleRow.height = 24;
+
+                    if (layout.leftEnd > 1) {
+                        ws.mergeCells(2, 1, 2, layout.leftEnd);
+                    }
+                    if (layout.titleEndCol > layout.titleStartCol) {
+                        ws.mergeCells(2, layout.titleStartCol, 2, layout.titleEndCol);
+                    }
+                    if (totalCols > layout.rightStart) {
+                        ws.mergeCells(2, layout.rightStart, 2, totalCols);
+                    }
+
+                    for (let c = 1; c <= totalCols; c++) {
+                        const cell = subTitleRow.getCell(c);
+                        cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0284C7' } };
+                        if (c >= layout.rightStart) {
+                            cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                        } else {
+                            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                        }
+                    }
+
+                    // Row 3: Column Headers
                     const headerTitles = baseColumns.map(c => c.header);
                     const headerRow = ws.addRow(headerTitles);
                     headerRow.height = 24;
@@ -1517,7 +1625,7 @@
                     for (let c = 1; c <= totalCols; c++) {
                         const cell = headerRow.getCell(c);
                         cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0284C7' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
                         cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
                         cell.border = {
                             top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -1643,11 +1751,25 @@
                     window.URL.revokeObjectURL(url);
                 } else {
                     // Fallback to SheetJS
+                    const downloadTime = getDownloadTimestamp();
                     const AOA = [];
-                    AOA.push([`Complete Monthly Attendance Sheet - ${monthName} ${year}`]);
+                    AOA.push(["ATTENDANCE RECORDING SYSTEM"]);
+
                     const headers = ["S.No", "Emp ID", "Master ID", "Name", "Directorate", "Category"];
                     for (let d = 1; d <= days; d++) headers.push(String(d));
                     headers.push("Opening", "Paid (-)", "Half", "Unpaid", "Sat Cut", "Closing", "Present", "Final", "Remarks");
+
+                    const colWidths = [6, 11, 14, 26, 22, 24];
+                    for (let d = 1; d <= days; d++) colWidths.push(4.5);
+                    colWidths.push(10, 10, 8, 10, 10, 10, 10, 10, 35);
+
+                    const layout = getHeaderRow2Layout(colWidths);
+                    const row2 = new Array(headers.length).fill('');
+                    row2[layout.titleStartCol - 1] = `Complete Monthly Attendance Sheet - ${monthName} ${year}`;
+                    if (layout.rightStart <= headers.length) {
+                        row2[layout.rightStart - 1] = downloadTime;
+                    }
+                    AOA.push(row2);
                     AOA.push(headers);
 
                     res.rows.forEach((r, idx) => {
@@ -1676,8 +1798,20 @@
 
                     const ws = XLSX.utils.aoa_to_sheet(AOA);
                     const wb = XLSX.utils.book_new();
-                    ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
-                    ws["!freeze"] = { xSplit: "0", ySplit: "2", topLeftCell: "A3", activePane: "bottomLeft", state: "frozen" };
+                    const wsMerges = [
+                        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
+                    ];
+                    if (layout.leftEnd > 1) {
+                        wsMerges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: layout.leftEnd - 1 } });
+                    }
+                    if (layout.titleEndCol > layout.titleStartCol) {
+                        wsMerges.push({ s: { r: 1, c: layout.titleStartCol - 1 }, e: { r: 1, c: layout.titleEndCol - 1 } });
+                    }
+                    if (headers.length > layout.rightStart) {
+                        wsMerges.push({ s: { r: 1, c: layout.rightStart - 1 }, e: { r: 1, c: headers.length - 1 } });
+                    }
+                    ws["!merges"] = wsMerges;
+                    ws["!freeze"] = { xSplit: "0", ySplit: "3", topLeftCell: "A4", activePane: "bottomLeft", state: "frozen" };
                     XLSX.utils.book_append_sheet(wb, ws, "Attendance Sheet");
                     XLSX.writeFile(wb, `Complete_Attendance_Sheet_${monthName}_${year}.xlsx`);
                 }
@@ -1859,29 +1993,62 @@
 
                 const ws = wb.addWorksheet("Ledger Summary", {
                     views: [
-                        { state: 'frozen', ySplit: 2, activePane: 'bottomLeft', topLeftCell: 'A3' }
+                        { state: 'frozen', ySplit: 3, activePane: 'bottomLeft', topLeftCell: 'A4' }
                     ]
                 });
 
                 const totalCols = activeCols.length;
                 const headers = activeCols.map(c => c.title);
+                const colWidths = activeCols.map(c => c.width || 10);
+                const downloadTime = getDownloadTimestamp();
+                const layout = getHeaderRow2Layout(colWidths);
 
-                // Row 1: Merged Title
-                const titleRow = ws.addRow([`Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`]);
+                // Row 1: Main System Heading
+                const sysRow = ws.addRow(["ATTENDANCE RECORDING SYSTEM"]);
                 ws.mergeCells(1, 1, 1, totalCols);
-                titleRow.height = 30;
-                const titleCell = ws.getCell(1, 1);
-                titleCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-                titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
-                titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+                sysRow.height = 30;
+                const sysCell = ws.getCell(1, 1);
+                sysCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                sysCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+                sysCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-                // Row 2: Column Headers
+                // Row 2: Sub-Title (Center) & Date/Time (Right) - balanced to match Row 1 center
+                const row2Vals = new Array(totalCols).fill('');
+                row2Vals[layout.titleStartCol - 1] = `Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`;
+                if (layout.rightStart <= totalCols) {
+                    row2Vals[layout.rightStart - 1] = downloadTime;
+                }
+                const subTitleRow = ws.addRow(row2Vals);
+                subTitleRow.height = 24;
+
+                if (layout.leftEnd > 1) {
+                    ws.mergeCells(2, 1, 2, layout.leftEnd);
+                }
+                if (layout.titleEndCol > layout.titleStartCol) {
+                    ws.mergeCells(2, layout.titleStartCol, 2, layout.titleEndCol);
+                }
+                if (totalCols > layout.rightStart) {
+                    ws.mergeCells(2, layout.rightStart, 2, totalCols);
+                }
+
+                for (let c = 1; c <= totalCols; c++) {
+                    const cell = subTitleRow.getCell(c);
+                    cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0284C7' } };
+                    if (c >= layout.rightStart) {
+                        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                    } else {
+                        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                    }
+                }
+
+                // Row 3: Column Headers
                 const headerRow = ws.addRow(headers);
                 headerRow.height = 24;
                 for (let c = 1; c <= totalCols; c++) {
                     const cell = headerRow.getCell(c);
                     cell.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0284C7' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
                     cell.alignment = { horizontal: 'center', vertical: 'middle' };
                     cell.border = {
                         top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -1963,7 +2130,17 @@
                 // Fallback to SheetJS
                 const AOA = [];
                 const totalCols = activeCols.length;
-                AOA.push([`Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`]);
+                const colWidths = activeCols.map(c => c.width || 10);
+                const downloadTime = getDownloadTimestamp();
+                const layout = getHeaderRow2Layout(colWidths);
+
+                AOA.push(["ATTENDANCE RECORDING SYSTEM"]);
+                const row2 = new Array(totalCols).fill('');
+                row2[layout.titleStartCol - 1] = `Leave Ledger Summary - ${mVal} ${yVal}${divSuffix}`;
+                if (layout.rightStart <= totalCols) {
+                    row2[layout.rightStart - 1] = downloadTime;
+                }
+                AOA.push(row2);
                 AOA.push(activeCols.map(c => c.title));
 
                 let sNo = 1;
@@ -1994,8 +2171,20 @@
 
                 const ws = XLSX.utils.aoa_to_sheet(AOA);
                 const wb = XLSX.utils.book_new();
-                ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }];
-                ws["!freeze"] = { xSplit: "0", ySplit: "2", topLeftCell: "A3", activePane: "bottomLeft", state: "frozen" };
+                const wsMerges = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }
+                ];
+                if (layout.leftEnd > 1) {
+                    wsMerges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: layout.leftEnd - 1 } });
+                }
+                if (layout.titleEndCol > layout.titleStartCol) {
+                    wsMerges.push({ s: { r: 1, c: layout.titleStartCol - 1 }, e: { r: 1, c: layout.titleEndCol - 1 } });
+                }
+                if (totalCols > layout.rightStart) {
+                    wsMerges.push({ s: { r: 1, c: layout.rightStart - 1 }, e: { r: 1, c: totalCols - 1 } });
+                }
+                ws["!merges"] = wsMerges;
+                ws["!freeze"] = { xSplit: "0", ySplit: "3", topLeftCell: "A4", activePane: "bottomLeft", state: "frozen" };
                 XLSX.utils.book_append_sheet(wb, ws, "Ledger Summary");
                 XLSX.writeFile(wb, `Leave_Ledger_Summary_${mVal}_${yVal}.xlsx`);
             }

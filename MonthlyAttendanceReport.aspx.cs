@@ -497,16 +497,23 @@ namespace AttendanceApp
                     new OracleParameter("MonthStart", monthStart)
                 };
 
-                if (role != 1 && role != 4 && allowedDivisions.Count > 0)
+                if (role != 1 && role != 4)
                 {
-                    List<string> divClauses = new List<string>();
-                    for (int i = 0; i < allowedDivisions.Count; i++)
+                    if (allowedDivisions != null && allowedDivisions.Count > 0)
                     {
-                        string pName = "Div" + i;
-                        divClauses.Add("e.Department LIKE :" + pName);
-                        empParams.Add(new OracleParameter(pName, allowedDivisions[i] + "%"));
+                        List<string> divParams = new List<string>();
+                        for (int i = 0; i < allowedDivisions.Count; i++)
+                        {
+                            string pName = "Div" + i;
+                            divParams.Add(":" + pName);
+                            empParams.Add(new OracleParameter(pName, allowedDivisions[i]));
+                        }
+                        empQuery += " AND e.Department IN (" + string.Join(", ", divParams) + ")";
                     }
-                    empQuery += " AND (" + string.Join(" OR ", divClauses) + ")";
+                    else
+                    {
+                        empQuery += " AND 1=0";
+                    }
                 }
 
                 empQuery += " ORDER BY LPAD(e.ID, 10, '0') ASC, e.Name ASC";

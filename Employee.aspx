@@ -2082,7 +2082,9 @@
                     return false;
                 }
 
-                var targetText = "Category: " + (category === "All" ? "All Categories" : category) + ", Directorate: " + (division === "All" ? "All Directorates" : division);
+                var catDropdown = document.getElementById('<%= ddlBulkLeaveCategory.ClientID %>');
+                var catText = (catDropdown && catDropdown.selectedIndex >= 0 && category !== "All") ? catDropdown.options[catDropdown.selectedIndex].text : "All Categories";
+                var targetText = "Category: " + catText + ", Directorate: " + (division === "All" ? "All Directorates" : division);
 
                 Swal.fire({
                     title: 'Are you sure?',
